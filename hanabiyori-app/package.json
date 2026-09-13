@@ -1,0 +1,9 @@
+{
+  "name": "hanabiyori-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "花札日和 ― Netlify Functions + OpenAI",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>花札占い ― 十二か月の札</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#101a30;
+    --bg-2:#182645;
+    --washi:#f4ecd8;
+    --washi-2:#ece1c8;
+    --ink:#201c16;
+    --gold:#c9a257;
+    --gold-soft:#e3c98a;
+    --vermillion:#a83c28;
+    --muted:#8a97b8;
+    --line: rgba(201,162,87,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 8%, rgba(201,162,87,0.10), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(168,60,40,0.12), transparent 45%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-2) 60%, var(--bg-1));
+    color:var(--washi);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+  .page{
+    width:100%;
+    max-width:480px;
+    padding:0 0 80px;
+  }
+  header{
+    text-align:center;
+    padding:56px 24px 28px;
+  }
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.3em;
+    color:var(--muted);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:34px;
+    margin:0 0 10px;
+    letter-spacing:0.08em;
+    color:var(--washi);
+  }
+  .lede{
+    font-size:14px;
+    line-height:1.9;
+    color:var(--muted);
+    max-width:320px;
+    margin:0 auto;
+  }
+  .stage{
+    padding:8px 24px 0;
+  }
+  .deck{
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    margin:20px 0 28px;
+    perspective:1000px;
+  }
+  .card{
+    width:78px;
+    height:112px;
+    border-radius:6px;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform 0.7s cubic-bezier(.4,.2,.2,1);
+  }
+  .card.flipped{ transform:rotateY(180deg); }
+  .face{
+    position:absolute; inset:0;
+    border-radius:6px;
+    backface-visibility:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:8px;
+    text-align:center;
+  }
+  .face.back{
+    background:
+      repeating-linear-gradient(135deg, rgba(201,162,87,0.18) 0 2px, transparent 2px 10px),
+      linear-gradient(160deg, #1e2c50, #131f3c);
+    border:1px solid var(--line);
+  }
+  .face.back::after{
+    content:"礼";
+    font-family:'Shippori Mincho', serif;
+    color:var(--gold-soft);
+    font-size:20px;
+    opacity:0.6;
+  }
+  .face.front{
+    background:linear-gradient(165deg, var(--washi), var(--washi-2));
+    color:var(--ink);
+    transform:rotateY(180deg);
+    border:1px solid rgba(32,28,22,0.15);
+  }
+  .face.front .month{
+    font-size:10px;
+    color:var(--vermillion);
+    letter-spacing:0.15em;
+    margin-bottom:6px;
+  }
+  .face.front .suit{
+    font-family:'Shippori Mincho', serif;
+    font-size:22px;
+    font-weight:700;
+  }
+  .slot-label{
+    text-align:center;
+    font-size:11px;
+    letter-spacing:0.15em;
+    color:var(--muted);
+    margin-top:8px;
+  }
+  .draw-btn{
+    display:block;
+    width:100%;
+    max-width:280px;
+    margin:8px auto 6px;
+    padding:16px 0;
+    background:var(--vermillion);
+    color:var(--washi);
+    border:none;
+    border-radius:999px;
+    font-family:'Shippori Mincho', serif;
+    font-size:16px;
+    letter-spacing:0.12em;
+    cursor:pointer;
+    box-shadow:0 8px 24px rgba(168,60,40,0.35);
+  }
+  .draw-btn:active{ transform:translateY(1px); }
+  .draw-btn:disabled{ opacity:0.45; cursor:default; box-shadow:none; }
+  .hint{
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    margin:0 0 8px;
+  }
+  .reading{
+    margin:28px 24px 0;
+    background:var(--washi);
+    color:var(--ink);
+    border-radius:14px;
+    padding:26px 22px;
+    display:none;
+  }
+  .reading.show{ display:block; }
+  .reading h2{
+    font-family:'Shippori Mincho', serif;
+    font-size:19px;
+    margin:0 0 18px;
+  }
+  .free-slot{ margin:0 0 16px; }
+  .free-slot .f-label{
+    display:block;
+    font-size:11px;
+    color:var(--vermillion);
+    letter-spacing:0.1em;
+    margin-bottom:4px;
+  }
+  .free-slot .f-text{
+    font-size:14px;
+    line-height:1.9;
+    margin:0;
+  }
+  .reading .overall{
+    border-top:1px solid rgba(32,28,22,0.15);
+    padding-top:16px;
+    margin-top:4px;
+  }
+  .reading .overall h4{
+    font-family:'Shippori Mincho', serif;
+    font-size:14px;
+    margin:0 0 6px;
+  }
+  .reading .overall p{
+    font-size:14px;
+    line-height:1.9;
+    margin:0 0 16px;
+  }
+  .reading .action{
+    border-top:1px solid rgba(32,28,22,0.15);
+    padding-top:16px;
+    font-size:13px;
+    color:var(--vermillion);
+  }
+  .reading .action b{ display:block; font-size:12px; color:var(--ink); opacity:0.6; margin-bottom:4px; font-weight:500;}
+  .yaku-banner{
+    background:linear-gradient(100deg, #c9a257, #e3c98a, #c9a257);
+    color:#2a1f10;
+    border-radius:10px;
+    padding:12px 16px;
+    margin:0 0 18px;
+    font-family:'Shippori Mincho', serif;
+    font-size:15px;
+    text-align:center;
+    letter-spacing:0.05em;
+  }
+  .yaku-banner .desc{
+    display:block;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:12px;
+    margin-top:4px;
+    font-weight:500;
+  }
+
+  .premium{
+    margin:20px 24px 0;
+    border-radius:14px;
+    padding:24px 22px;
+    background:linear-gradient(165deg, rgba(201,162,87,0.10), rgba(201,162,87,0.03));
+    border:1px solid var(--line);
+  }
+  .premium h3{
+    font-family:'Shippori Mincho', serif;
+    font-size:18px;
+    margin:0 0 8px;
+    color:var(--gold-soft);
+  }
+  .premium p{
+    font-size:13px;
+    line-height:1.8;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+  .premium .price{
+    font-size:15px;
+    color:var(--gold-soft);
+    font-weight:700;
+    margin:0 0 18px;
+    font-family:'Shippori Mincho', serif;
+  }
+  .unlock-row{
+    display:flex;
+    gap:8px;
+  }
+  .unlock-row input{
+    flex:1;
+    padding:12px 14px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.04);
+    color:var(--washi);
+    font-size:14px;
+  }
+  .unlock-row input::placeholder{ color:var(--muted); }
+  .unlock-row button{
+    padding:12px 18px;
+    border-radius:8px;
+    border:1px solid var(--gold);
+    background:transparent;
+    color:var(--gold-soft);
+    font-size:13px;
+    cursor:pointer;
+  }
+  .unlock-msg{ font-size:12px; margin-top:10px; min-height:16px; }
+  .unlock-msg.err{ color:#e08a76; }
+  .unlock-msg.ok{ color:#a9c98a; }
+  .buy-link{
+    display:inline-block;
+    margin-top:14px;
+    font-size:12px;
+    color:var(--gold-soft);
+    text-decoration:underline;
+  }
+  .concern-label{
+    font-size:12px;
+    color:var(--washi);
+    opacity:0.85;
+    letter-spacing:0.05em;
+    margin:4px 0 8px;
+  }
+  .category-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .cat-btn{
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.04);
+    color:var(--washi);
+    font-size:13px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .cat-btn.active{
+    background:var(--vermillion);
+    border-color:var(--vermillion);
+    color:var(--washi);
+  }
+  #concernInput{
+    width:100%;
+    padding:12px 14px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.04);
+    color:var(--washi);
+    font-size:14px;
+    font-family:inherit;
+    line-height:1.7;
+    resize:vertical;
+    margin-bottom:16px;
+  }
+  #concernInput::placeholder{ color:var(--muted); }
+  .premium-content{ display:none; margin-top:6px; }
+  .premium-content.show{ display:block; }
+  .premium-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin:0 0 20px;
+  }
+  .premium-tile{
+    background:linear-gradient(165deg, var(--washi), var(--washi-2));
+    color:var(--ink);
+    border-radius:8px;
+    padding:12px 8px;
+    text-align:center;
+  }
+  .premium-tile .tile-label{ font-size:10px; color:var(--vermillion); margin-bottom:6px; line-height:1.4; }
+  .premium-tile .tile-month{ font-size:10px; color:#7a7260; margin-bottom:2px; }
+  .premium-tile .tile-suit{ font-family:'Shippori Mincho', serif; font-size:18px; font-weight:700; }
+  .premium-detail .detail-row{ margin-bottom:16px; }
+  .premium-detail .detail-row .d-label{
+    display:block;
+    font-size:12px;
+    color:var(--gold-soft);
+    margin-bottom:4px;
+    letter-spacing:0.05em;
+  }
+  .premium-detail .detail-row .d-text{
+    font-size:13px;
+    line-height:1.9;
+    color:var(--washi);
+    opacity:0.9;
+    margin:0;
+  }
+  .char-count{
+    text-align:right;
+    font-size:11px;
+    color:var(--muted);
+    margin:-10px 0 12px;
+  }
+  .form-error{
+    color:#e08a76;
+    font-size:12px;
+    min-height:16px;
+    margin:0 0 10px;
+  }
+  .loading-box, .error-box{
+    text-align:center;
+    padding:20px 0;
+  }
+  .loading-box p{
+    font-size:13px;
+    color:var(--gold-soft);
+    margin:0 0 8px;
+  }
+  .error-box p{
+    font-size:13px;
+    color:#e08a76;
+    margin:0 0 14px;
+  }
+  .concern-echo{
+    font-size:12px;
+    color:var(--muted);
+    margin:0 0 16px;
+    padding:10px 12px;
+    background:rgba(255,255,255,0.04);
+    border-radius:8px;
+    line-height:1.7;
+  }
+  .overall-box{
+    background:var(--washi);
+    color:var(--ink);
+    border-radius:12px;
+    padding:18px 18px;
+    margin-top:4px;
+  }
+  .overall-box h4{
+    font-family:'Shippori Mincho', serif;
+    font-size:14px;
+    margin:0 0 6px;
+  }
+  .overall-box p{ font-size:13px; line-height:1.9; color:#3a3428; margin:0 0 14px; }
+  .overall-box p:last-child{ margin-bottom:0; }
+  footer{
+    text-align:center;
+    padding:36px 24px 0;
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:0.05em;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <p class="eyebrow">HANAFUDA BIYORI</p>
+    <h1>花札占い</h1>
+    <p class="lede">十二の月の札から、今日と、これからの流れを読む。</p>
+  </header>
+
+  <div class="stage">
+    <div class="deck" id="deck">
+      <div class="card" id="card0"><div class="face back"></div><div class="face front"><div class="month"></div><div class="suit"></div></div></div>
+      <div class="card" id="card1"><div class="face back"></div><div class="face front"><div class="month"></div><div class="suit"></div></div></div>
+      <div class="card" id="card2"><div class="face back"></div><div class="face front"><div class="month"></div><div class="suit"></div></div></div>
+    </div>
+    <div class="slot-label">状況　―　課題　―　鍵</div>
+
+    <button class="draw-btn" id="drawBtn">札を、めくる</button>
+    <p class="hint">1日1回、今日の流れを確かめる</p>
+  </div>
+
+  <div class="reading" id="reading">
+    <div class="yaku-banner" id="yakuBanner" style="display:none;"></div>
+    <h2 id="readingTitle">―</h2>
+
+    <div class="free-slot">
+      <span class="f-label" id="slot1Label">現在の状況</span>
+      <p class="f-text" id="slot1Text"></p>
+    </div>
+    <div class="free-slot">
+      <span class="f-label" id="slot2Label">乗り越える課題</span>
+      <p class="f-text" id="slot2Text"></p>
+    </div>
+    <div class="free-slot">
+      <span class="f-label" id="slot3Label">流れを変える鍵</span>
+      <p class="f-text" id="slot3Text"></p>
+    </div>
+
+    <div class="overall">
+      <h4>総合メッセージ</h4>
+      <p id="overallText"></p>
+    </div>
+
+    <div class="action">
+      <b>今日の一手</b>
+      <span id="readingAction"></span>
+    </div>
+  </div>
+
+  <div class="premium" id="premiumBox" style="display:none;">
+    <h3>今の悩みを、八つの視点から読み解く</h3>
+    <p>仕事、お金、恋愛、人間関係。今抱えている具体的な悩みを入力すると、八枚の札が状況の全体像と次の一手を示す。</p>
+    <p class="price">八枚読み　980円</p>
+
+    <div id="unlockSection">
+      <div class="unlock-row">
+        <input type="text" id="codeInput" placeholder="購入後に届く鑑定コードを入力">
+        <button id="unlockBtn">確認</button>
+      </div>
+      <div class="unlock-msg" id="unlockMsg"></div>
+      <a class="buy-link" id="buyLink" href="#" target="_blank" rel="noopener">八枚読みを購入する　980円 ↗</a>
+    </div>
+
+    <div id="concernSection" style="display:none;">
+      <p class="concern-label">相談ジャンル</p>
+      <div class="category-group" id="categoryGroup">
+        <button type="button" class="cat-btn" data-cat="仕事">仕事</button>
+        <button type="button" class="cat-btn" data-cat="お金">お金</button>
+        <button type="button" class="cat-btn" data-cat="恋愛">恋愛</button>
+        <button type="button" class="cat-btn" data-cat="人間関係">人間関係</button>
+        <button type="button" class="cat-btn" data-cat="これからの流れ">これからの流れ</button>
+        <button type="button" class="cat-btn" data-cat="その他">その他</button>
+      </div>
+      <p class="concern-label">相談内容(必須)</p>
+      <textarea id="concernInput" rows="4" maxlength="400" placeholder="今、いちばん気になっていることを具体的に書いてください"></textarea>
+      <p class="char-count" id="charCount">0 / 400</p>
+      <div class="form-error" id="formError"></div>
+      <button class="draw-btn" id="premiumDrawBtn">八枚読みを、鑑定してもらう</button>
+    </div>
+
+    <div class="loading-box" id="loadingBox" style="display:none;">
+      <p>鑑定中です。しばらくお待ちください…</p>
+    </div>
+
+    <div class="error-box" id="errorBox" style="display:none;">
+      <p id="errorText"></p>
+      <button class="draw-btn" id="retryBtn">もう一度試す</button>
+    </div>
+
+    <div class="premium-content" id="premiumContent"></div>
+  </div>
+
+  <footer>花札日和 ― 十二か月の札で読む、今日の流れ</footer>
+</div>
+
+<script>
+// ============================================================
+// 花札12ヶ月の意味データ(このデータ自体は変更していない)
+// ============================================================
+const SUITS = [
+  {month:"一月", name:"松", short:"変わらぬ土台。今ある基盤を信じて動いていい時期。", long:"松は一年を通して緑を絶やさない、変わらないものの象徴。今のあなたの状況は、派手さはなくとも土台が固まっている。焦って作り変える必要はなく、今ある関係・仕組みをどう活かすかが焦点になる。", action:"今日は新しいことより、今ある手札の点検を。"},
+  {month:"二月", name:"梅", short:"寒さの中の先駆け。まだ結果は出ないが、動き出す価値はある。", long:"梅は雪の残る中で一番早く咲く花。周りがまだ動いていない今だからこそ、先に手をつけたことが後で効いてくる。結果はすぐに出なくても、種はもう蒔かれている。", action:"誰よりも先に、小さな一歩を踏み出す。"},
+  {month:"三月", name:"桜", short:"短い盛り。今の勢いは長くは続かない、今のうちに動く。", long:"桜は満開の期間が短い。今、勢いや注目が集まっているなら、それは長続きしない前提で動くべき局面。判断を先延ばしにすると、機会そのものが散ってしまう。", action:"迷っている案件、今日中に一つ結論を出す。"},
+  {month:"四月", name:"藤", short:"つながりの中で伸びる。一人で抱えず、誰かに預ける時期。", long:"藤は他の木に絡みつきながら高く伸びる植物。今のあなたに必要なのは、自力ですべて解決することではなく、誰かとの繋がりを頼ること。一人で背負っている何かを、少し手放していい。", action:"今日、誰か一人に「頼み事」を一つしてみる。"},
+  {month:"五月", name:"菖蒲", short:"筋を通す力が問われる。曖昧にしていたことに白黒つける時。", long:"菖蒲は「勝負」や「尚武」に通じる札。今のあなたは、どこかで曖昧にしてきた判断に決着をつけるべき局面にいる。角が立つことを恐れず、筋を通した方が長期的には楽になる。", action:"先延ばしにしている「はい/いいえ」の返事を、今日出す。"},
+  {month:"六月", name:"牡丹", short:"華やかさが力になる。今は控えめより、目立って良い時期。", long:"牡丹は「花の王」と呼ばれる存在感の象徴。今は謙遜して控えめにいる時期ではなく、自分の仕事や考えを堂々と外に出していい局面。遠慮が、むしろ機会を逃す原因になる。", action:"今日やったことを、誰かに一言でいいから見せる。"},
+  {month:"七月", name:"萩", short:"地味な積み重ねが後で効く。派手さのない努力を続けて良い。", long:"萩は目立たないが、根を張って毎年花をつける植物。今の状況は評価されにくいかもしれないが、その積み重ねは無駄になっていない。焦らず淡々と続けることが最終的に一番強い。", action:"地味だが後回しにしていた作業を一つ片付ける。"},
+  {month:"八月", name:"芒", short:"視界が開ける。全体を見渡して、方向を決め直す時。", long:"芒(すすき)は秋の見晴らしの良さの象徴。今は細部にこだわるより、少し引いて全体を見渡すべき局面。今のやり方をこのまま続けるべきか、方向を変えるべきか、俯瞰する時間を取る価値がある。", action:"今日は5分だけ、今後3ヶ月の予定を紙に書き出す。"},
+  {month:"九月", name:"菊", short:"長く続けてきたものが実を結び始める。評価を受け取っていい。", long:"菊は長寿と気品の象徴。これまで積み重ねてきたことが、少しずつ形になり始めている時期。謙遜しすぎず、来た評価や結果を素直に受け取ることが、次の意欲につながる。", action:"最近の小さな成果を一つ、自分で認めてあげる。"},
+  {month:"十月", name:"紅葉", short:"終わりが近い何かがある。惜しまず区切りをつけていい。", long:"紅葉は散る前に一番美しく色づく。今関わっている何か(仕事のやり方、関係、習慣)は、終わりに近づいているサインかもしれない。しがみつくより、綺麗に区切りをつけた方が次に進みやすい。", action:"やめどきを感じているものを、一つ紙に書き出す。"},
+  {month:"十一月", name:"柳", short:"しなやかさが武器になる。強引に押すより、受け流していい。", long:"柳は強い風にも折れず、しなって受け流す。今の局面で正面からぶつかるのは得策ではない。相手や状況に合わせて形を変えながら、最終的な目的だけはブラさない柔軟さが求められる。", action:"一つだけ、自分のやり方に固執せず譲ってみる。"},
+  {month:"十二月", name:"桐", short:"一区切りと、次への準備。今年の総括をする時期。", long:"桐は箪笥にもなる、次の世代へ受け継ぐ木。今は一つのサイクルの締めくくりであり、同時に次の準備を始める時期でもある。今年やったことを棚卸しし、来期に何を持ち越すか整理すると良い。", action:"今日、今年やり切ったことを3つ書き出す。"},
+];
+
+const SLOT_LABEL = ["現在の状況","乗り越える課題","流れを変える鍵"];
+const PREMIUM_LABELS = [
+  "現在の状況","表面に見えている課題","まだ気づいていない背景","自分自身の状態",
+  "相手・周囲の状態","環境から受ける影響","流れを変える鍵","このまま進んだ場合の結末"
+];
+
+// ============================================================
+// 購入導線・解放判定 まわりの設定
+// (この節はあとでサーバー側処理に切り出す前提なので、他の処理から分離してある)
+// ============================================================
+
+// ▼1日1回制限。false にすると制限を解除できる(開発・確認用)
+const DAILY_LIMIT_ENABLED = true;
+
+// ============================================================
+// 抽選ロジック(重複なし)
+// ============================================================
+function pickUniqueN(n, excludeNames){
+  const pool = SUITS.filter(s => !excludeNames || !excludeNames.includes(s.name));
+  const arr = [...pool];
+  const out = [];
+  for(let i=0;i<n && arr.length>0;i++){
+    const idx = Math.floor(Math.random()*arr.length);
+    out.push(arr.splice(idx,1)[0]);
+  }
+  return out;
+}
+
+// ============================================================
+// 役判定(12ヶ月の月札データに対応した簡易判定)
+// ============================================================
+function detectYaku(picks){
+  const names = new Set(picks.map(p=>p.name));
+  const has = n => names.has(n);
+  const hikari = ["松","桜","芒","柳","桐"];
+  const hikariCount = hikari.filter(has).length;
+  const results = [];
+  if(hikariCount === 5){
+    results.push({name:"五光", desc:"最上級の吉兆。今の流れ全体が大きく開いていく暗示。"});
+  } else if(hikariCount === 4){
+    results.push({name:"四光", desc:"かなりの好調気配。ここぞという場面で強気に出ていい時期。"});
+  }
+  if(has("萩") && has("紅葉") && has("牡丹")){
+    results.push({name:"猪鹿蝶", desc:"人・環境・自分自身、三つの力が噛み合うサイン。動くなら今。"});
+  }
+  if(has("桜") && has("菊")){
+    results.push({name:"花見で一杯", desc:"根を詰めすぎている頃合い。労をねぎらい、一息つく価値がある。"});
+  }
+  if(has("芒") && has("菊")){
+    results.push({name:"月見で一杯", desc:"急ぐ場面ではない。静かに現状を噛みしめていい時。"});
+  }
+  if(has("松") && has("梅") && has("桜")){
+    results.push({name:"赤短", desc:"言葉と見せ方に気を配ると、流れがもう一段良くなる暗示。"});
+  }
+  if(has("牡丹") && has("菊") && has("紅葉")){
+    results.push({name:"青短", desc:"落ち着きと品位がそのまま評価に繋がる時期。慎重さが武器になる。"});
+  }
+  return results;
+}
+
+function yakuInnerHtml(yaku){
+  return yaku.map(y=>`${y.name} 成立<span class="desc">${y.desc}</span>`)
+    .join('<hr style="border:none;border-top:1px solid rgba(42,31,16,0.2);margin:8px 0;">');
+}
+
+// ============================================================
+// 1日1回制限(localStorage。プレビュー環境等で使えない場合は自動的に無効化される)
+// ============================================================
+function getTodayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+const DAILY_KEY = 'hanabiyori-daily-v1';
+
+function loadTodayFreeReading(){
+  if(!DAILY_LIMIT_ENABLED) return null;
+  try{
+    const raw = localStorage.getItem(DAILY_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(data.date !== getTodayStr()) return null;
+    const restored = data.names.map(n => SUITS.find(s=>s.name===n)).filter(Boolean);
+    return restored.length === data.names.length ? restored : null;
+  }catch(e){ return null; }
+}
+function saveTodayFreeReading(picks){
+  if(!DAILY_LIMIT_ENABLED) return;
+  try{
+    localStorage.setItem(DAILY_KEY, JSON.stringify({date:getTodayStr(), names:picks.map(p=>p.name)}));
+  }catch(e){ /* localStorageが使えない環境では単に保存しない */ }
+}
+
+// ============================================================
+// 無料の三枚読み
+// ============================================================
+const drawBtn = document.getElementById('drawBtn');
+const reading = document.getElementById('reading');
+const premiumBox = document.getElementById('premiumBox');
+const yakuBanner = document.getElementById('yakuBanner');
+
+function buildFreeOverall(picks){
+  return `${picks[0].short} そのうえで、${picks[1].short} 最後に効いてくるのは、${picks[2].short}`;
+}
+
+function renderFreeReading(picks, animate){
+  const doRender = ()=>{
+    document.getElementById('readingTitle').textContent = `${picks[0].name} ・ ${picks[1].name} ・ ${picks[2].name}`;
+    document.getElementById('slot1Label').textContent = SLOT_LABEL[0];
+    document.getElementById('slot1Text').textContent = picks[0].short;
+    document.getElementById('slot2Label').textContent = SLOT_LABEL[1];
+    document.getElementById('slot2Text').textContent = picks[1].short;
+    document.getElementById('slot3Label').textContent = SLOT_LABEL[2];
+    document.getElementById('slot3Text').textContent = picks[2].short;
+    document.getElementById('overallText').textContent = buildFreeOverall(picks);
+    document.getElementById('readingAction').textContent = picks[2].action;
+
+    const yaku = detectYaku(picks);
+    if(yaku.length){
+      yakuBanner.innerHTML = yakuInnerHtml(yaku);
+      yakuBanner.style.display = 'block';
+    } else {
+      yakuBanner.style.display = 'none';
+    }
+
+    reading.classList.add('show');
+    premiumBox.style.display = 'block';
+    window.__lastPicks = picks;
+  };
+
+  picks.forEach((s, i)=>{
+    const card = document.getElementById('card'+i);
+    const front = card.querySelector('.front');
+    front.querySelector('.month').textContent = s.month;
+    front.querySelector('.suit').textContent = s.name;
+    if(animate){
+      card.classList.remove('flipped');
+      setTimeout(()=>card.classList.add('flipped'), 250*i);
+    } else {
+      card.classList.add('flipped');
+    }
+  });
+
+  if(animate){ setTimeout(doRender, 900); } else { doRender(); }
+}
+
+drawBtn.addEventListener('click', ()=>{
+  drawBtn.disabled = true;
+  const picks = pickUniqueN(3);
+  renderFreeReading(picks, true);
+  saveTodayFreeReading(picks);
+  setTimeout(()=>{
+    if(DAILY_LIMIT_ENABLED){
+      drawBtn.textContent = "本日は占い済み(また明日)";
+      drawBtn.disabled = true;
+    } else {
+      drawBtn.textContent = "もう一度、めくる";
+      drawBtn.disabled = false;
+    }
+  }, 950);
+});
+
+// ページを開いた時、今日すでに占っていたら同じ結果を復元する
+(function initToday(){
+  const existing = loadTodayFreeReading();
+  if(existing){
+    renderFreeReading(existing, false);
+    drawBtn.textContent = "本日は占い済み(また明日)";
+    drawBtn.disabled = true;
+  }
+})();
+
+// ============================================================
+// 有料の八枚読み(AI鑑定。Netlify Functions経由)
+// ============================================================
+
+// ▼購入リンク(Stripe Payment LinkのURLが決まったらここを差し替える)
+const PURCHASE_URL = "https://your-base-shop.example.com/items/hanabiyori-8";
+
+document.getElementById('buyLink').href = PURCHASE_URL;
+
+const unlockSection = document.getElementById('unlockSection');
+const concernSection = document.getElementById('concernSection');
+const loadingBox = document.getElementById('loadingBox');
+const errorBox = document.getElementById('errorBox');
+const formError = document.getElementById('formError');
+const concernInput = document.getElementById('concernInput');
+const charCount = document.getElementById('charCount');
+const CONCERN_MAX = 400;
+let selectedCategory = null;
+let currentToken = null;
+
+concernInput.addEventListener('input', ()=>{
+  charCount.textContent = `${concernInput.value.length} / ${CONCERN_MAX}`;
+});
+
+document.querySelectorAll('.cat-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCategory = btn.dataset.cat;
+  });
+});
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+document.getElementById('unlockBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('codeInput').value.trim();
+  const msg = document.getElementById('unlockMsg');
+  if(!input){
+    msg.textContent = "コードを入力してください。";
+    msg.className = "unlock-msg err";
+    return;
+  }
+  msg.textContent = "確認しています…";
+  msg.className = "unlock-msg";
+  try{
+    const res = await fetch(`/.netlify/functions/verify-entitlement?token=${encodeURIComponent(input)}`);
+    const data = await res.json();
+    if(!data.valid){
+      msg.textContent = "コードが見つかりません。購入時のコードをご確認ください。";
+      msg.className = "unlock-msg err";
+      return;
+    }
+    currentToken = input;
+    msg.textContent = "確認できました。相談内容を入力してください。";
+    msg.className = "unlock-msg ok";
+    unlockSection.style.display = 'none';
+    concernSection.style.display = 'block';
+  }catch(e){
+    msg.textContent = "通信に失敗しました。しばらくしてからもう一度お試しください。";
+    msg.className = "unlock-msg err";
+  }
+});
+
+function renderPremiumResult(result){
+  const content = document.getElementById('premiumContent');
+  const yaku = result.yaku || [];
+  const yakuHtml = yaku.length
+    ? `<div class="yaku-banner">${yaku.map(y=>`${y.name} 成立<span class="desc">${y.desc}</span>`).join('<hr style="border:none;border-top:1px solid rgba(42,31,16,0.2);margin:8px 0;">')}</div>`
+    : '';
+
+  const r = result.result || {};
+  const cardResults = Array.isArray(r.cards) ? r.cards : [];
+
+  const gridHtml = `<div class="premium-grid">${(result.cards || []).map((c,i)=>`
+    <div class="premium-tile">
+      <div class="tile-label">${i+1}. ${(cardResults[i] && cardResults[i].role) || ''}</div>
+      <div class="tile-month">${c.month}</div>
+      <div class="tile-suit">${c.name}</div>
+    </div>
+  `).join('')}</div>`;
+
+  const detailHtml = `<div class="premium-detail">${cardResults.map((c,i)=>`
+    <div class="detail-row">
+      <span class="d-label">${i+1}. ${escapeHtml(c.role || '')}</span>
+      <p class="d-text">${escapeHtml(c.interpretation || '')}</p>
+    </div>
+  `).join('')}</div>`;
+
+  const overallHtml = `
+    <div class="overall-box">
+      <h4>総合メッセージ</h4>
+      <p>${escapeHtml(r.overall || '')}</p>
+      <h4>今すぐできる一手</h4>
+      <p>${escapeHtml(r.nextAction || '')}</p>
+      ${r.caution ? `<h4>気をつけること</h4><p>${escapeHtml(r.caution)}</p>` : ''}
+    </div>
+  `;
+
+  content.innerHTML = yakuHtml + gridHtml + detailHtml + overallHtml;
+  content.classList.add('show');
+}
+
+async function submitReading(){
+  const concern = concernInput.value.trim();
+  formError.textContent = '';
+
+  if(!concern){
+    formError.textContent = "相談内容を入力してください。";
+    return;
+  }
+  if(concern.length > CONCERN_MAX){
+    formError.textContent = `相談内容は${CONCERN_MAX}文字以内にしてください。`;
+    return;
+  }
+  if(!currentToken){
+    formError.textContent = "コードの確認からやり直してください。";
+    return;
+  }
+
+  const category = selectedCategory || 'その他';
+  concernSection.style.display = 'none';
+  loadingBox.style.display = 'block';
+  errorBox.style.display = 'none';
+
+  try{
+    const res = await fetch('/.netlify/functions/generate-reading', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ token: currentToken, category, concern })
+    });
+    const data = await res.json();
+    loadingBox.style.display = 'none';
+    if(!res.ok){
+      document.getElementById('errorText').textContent = data.error || "鑑定に失敗しました。";
+      errorBox.style.display = 'block';
+      return;
+    }
+    renderPremiumResult(data);
+  }catch(e){
+    loadingBox.style.display = 'none';
+    document.getElementById('errorText').textContent = "通信に失敗しました。電波状況を確認し、もう一度お試しください。";
+    errorBox.style.display = 'block';
+  }
+}
+
+document.getElementById('premiumDrawBtn').addEventListener('click', submitReading);
+document.getElementById('retryBtn').addEventListener('click', ()=>{
+  errorBox.style.display = 'none';
+  concernSection.style.display = 'block';
+});
+</script>
+</body>
+</html>
