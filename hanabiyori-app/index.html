@@ -1,855 +1,204 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>花札占い ― 十二か月の札</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg-1:#101a30;
-    --bg-2:#182645;
-    --washi:#f4ecd8;
-    --washi-2:#ece1c8;
-    --ink:#201c16;
-    --gold:#c9a257;
-    --gold-soft:#e3c98a;
-    --vermillion:#a83c28;
-    --muted:#8a97b8;
-    --line: rgba(201,162,87,0.35);
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:
-      radial-gradient(circle at 15% 8%, rgba(201,162,87,0.10), transparent 40%),
-      radial-gradient(circle at 85% 92%, rgba(168,60,40,0.12), transparent 45%),
-      linear-gradient(180deg, var(--bg-1), var(--bg-2) 60%, var(--bg-1));
-    color:var(--washi);
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-  }
-  .page{
-    width:100%;
-    max-width:480px;
-    padding:0 0 80px;
-  }
-  header{
-    text-align:center;
-    padding:56px 24px 28px;
-  }
-  .eyebrow{
-    font-size:12px;
-    letter-spacing:0.3em;
-    color:var(--muted);
-    margin:0 0 14px;
-  }
-  h1{
-    font-family:'Shippori Mincho', serif;
-    font-weight:700;
-    font-size:34px;
-    margin:0 0 10px;
-    letter-spacing:0.08em;
-    color:var(--washi);
-  }
-  .lede{
-    font-size:14px;
-    line-height:1.9;
-    color:var(--muted);
-    max-width:320px;
-    margin:0 auto;
-  }
-  .stage{
-    padding:8px 24px 0;
-  }
-  .deck{
-    display:flex;
-    justify-content:center;
-    gap:14px;
-    margin:20px 0 28px;
-    perspective:1000px;
-  }
-  .card{
-    width:78px;
-    height:112px;
-    border-radius:6px;
-    position:relative;
-    transform-style:preserve-3d;
-    transition:transform 0.7s cubic-bezier(.4,.2,.2,1);
-  }
-  .card.flipped{ transform:rotateY(180deg); }
-  .face{
-    position:absolute; inset:0;
-    border-radius:6px;
-    backface-visibility:hidden;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:8px;
-    text-align:center;
-  }
-  .face.back{
-    background:
-      repeating-linear-gradient(135deg, rgba(201,162,87,0.18) 0 2px, transparent 2px 10px),
-      linear-gradient(160deg, #1e2c50, #131f3c);
-    border:1px solid var(--line);
-  }
-  .face.back::after{
-    content:"礼";
-    font-family:'Shippori Mincho', serif;
-    color:var(--gold-soft);
-    font-size:20px;
-    opacity:0.6;
-  }
-  .face.front{
-    background:linear-gradient(165deg, var(--washi), var(--washi-2));
-    color:var(--ink);
-    transform:rotateY(180deg);
-    border:1px solid rgba(32,28,22,0.15);
-  }
-  .face.front .month{
-    font-size:10px;
-    color:var(--vermillion);
-    letter-spacing:0.15em;
-    margin-bottom:6px;
-  }
-  .face.front .suit{
-    font-family:'Shippori Mincho', serif;
-    font-size:22px;
-    font-weight:700;
-  }
-  .slot-label{
-    text-align:center;
-    font-size:11px;
-    letter-spacing:0.15em;
-    color:var(--muted);
-    margin-top:8px;
-  }
-  .draw-btn{
-    display:block;
-    width:100%;
-    max-width:280px;
-    margin:8px auto 6px;
-    padding:16px 0;
-    background:var(--vermillion);
-    color:var(--washi);
-    border:none;
-    border-radius:999px;
-    font-family:'Shippori Mincho', serif;
-    font-size:16px;
-    letter-spacing:0.12em;
-    cursor:pointer;
-    box-shadow:0 8px 24px rgba(168,60,40,0.35);
-  }
-  .draw-btn:active{ transform:translateY(1px); }
-  .draw-btn:disabled{ opacity:0.45; cursor:default; box-shadow:none; }
-  .hint{
-    text-align:center;
-    font-size:12px;
-    color:var(--muted);
-    margin:0 0 8px;
-  }
-  .reading{
-    margin:28px 24px 0;
-    background:var(--washi);
-    color:var(--ink);
-    border-radius:14px;
-    padding:26px 22px;
-    display:none;
-  }
-  .reading.show{ display:block; }
-  .reading h2{
-    font-family:'Shippori Mincho', serif;
-    font-size:19px;
-    margin:0 0 18px;
-  }
-  .free-slot{ margin:0 0 16px; }
-  .free-slot .f-label{
-    display:block;
-    font-size:11px;
-    color:var(--vermillion);
-    letter-spacing:0.1em;
-    margin-bottom:4px;
-  }
-  .free-slot .f-text{
-    font-size:14px;
-    line-height:1.9;
-    margin:0;
-  }
-  .reading .overall{
-    border-top:1px solid rgba(32,28,22,0.15);
-    padding-top:16px;
-    margin-top:4px;
-  }
-  .reading .overall h4{
-    font-family:'Shippori Mincho', serif;
-    font-size:14px;
-    margin:0 0 6px;
-  }
-  .reading .overall p{
-    font-size:14px;
-    line-height:1.9;
-    margin:0 0 16px;
-  }
-  .reading .action{
-    border-top:1px solid rgba(32,28,22,0.15);
-    padding-top:16px;
-    font-size:13px;
-    color:var(--vermillion);
-  }
-  .reading .action b{ display:block; font-size:12px; color:var(--ink); opacity:0.6; margin-bottom:4px; font-weight:500;}
-  .yaku-banner{
-    background:linear-gradient(100deg, #c9a257, #e3c98a, #c9a257);
-    color:#2a1f10;
-    border-radius:10px;
-    padding:12px 16px;
-    margin:0 0 18px;
-    font-family:'Shippori Mincho', serif;
-    font-size:15px;
-    text-align:center;
-    letter-spacing:0.05em;
-  }
-  .yaku-banner .desc{
-    display:block;
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:12px;
-    margin-top:4px;
-    font-weight:500;
-  }
-
-  .premium{
-    margin:20px 24px 0;
-    border-radius:14px;
-    padding:24px 22px;
-    background:linear-gradient(165deg, rgba(201,162,87,0.10), rgba(201,162,87,0.03));
-    border:1px solid var(--line);
-  }
-  .premium h3{
-    font-family:'Shippori Mincho', serif;
-    font-size:18px;
-    margin:0 0 8px;
-    color:var(--gold-soft);
-  }
-  .premium p{
-    font-size:13px;
-    line-height:1.8;
-    color:var(--muted);
-    margin:0 0 16px;
-  }
-  .premium .price{
-    font-size:15px;
-    color:var(--gold-soft);
-    font-weight:700;
-    margin:0 0 18px;
-    font-family:'Shippori Mincho', serif;
-  }
-  .unlock-row{
-    display:flex;
-    gap:8px;
-  }
-  .unlock-row input{
-    flex:1;
-    padding:12px 14px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,0.04);
-    color:var(--washi);
-    font-size:14px;
-  }
-  .unlock-row input::placeholder{ color:var(--muted); }
-  .unlock-row button{
-    padding:12px 18px;
-    border-radius:8px;
-    border:1px solid var(--gold);
-    background:transparent;
-    color:var(--gold-soft);
-    font-size:13px;
-    cursor:pointer;
-  }
-  .unlock-msg{ font-size:12px; margin-top:10px; min-height:16px; }
-  .unlock-msg.err{ color:#e08a76; }
-  .unlock-msg.ok{ color:#a9c98a; }
-  .buy-link{
-    display:inline-block;
-    margin-top:14px;
-    font-size:12px;
-    color:var(--gold-soft);
-    text-decoration:underline;
-  }
-  .concern-label{
-    font-size:12px;
-    color:var(--washi);
-    opacity:0.85;
-    letter-spacing:0.05em;
-    margin:4px 0 8px;
-  }
-  .category-group{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-bottom:16px;
-  }
-  .cat-btn{
-    padding:9px 14px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,0.04);
-    color:var(--washi);
-    font-size:13px;
-    cursor:pointer;
-    font-family:inherit;
-  }
-  .cat-btn.active{
-    background:var(--vermillion);
-    border-color:var(--vermillion);
-    color:var(--washi);
-  }
-  #concernInput{
-    width:100%;
-    padding:12px 14px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,0.04);
-    color:var(--washi);
-    font-size:14px;
-    font-family:inherit;
-    line-height:1.7;
-    resize:vertical;
-    margin-bottom:16px;
-  }
-  #concernInput::placeholder{ color:var(--muted); }
-  .premium-content{ display:none; margin-top:6px; }
-  .premium-content.show{ display:block; }
-  .premium-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin:0 0 20px;
-  }
-  .premium-tile{
-    background:linear-gradient(165deg, var(--washi), var(--washi-2));
-    color:var(--ink);
-    border-radius:8px;
-    padding:12px 8px;
-    text-align:center;
-  }
-  .premium-tile .tile-label{ font-size:10px; color:var(--vermillion); margin-bottom:6px; line-height:1.4; }
-  .premium-tile .tile-month{ font-size:10px; color:#7a7260; margin-bottom:2px; }
-  .premium-tile .tile-suit{ font-family:'Shippori Mincho', serif; font-size:18px; font-weight:700; }
-  .premium-detail .detail-row{ margin-bottom:16px; }
-  .premium-detail .detail-row .d-label{
-    display:block;
-    font-size:12px;
-    color:var(--gold-soft);
-    margin-bottom:4px;
-    letter-spacing:0.05em;
-  }
-  .premium-detail .detail-row .d-text{
-    font-size:13px;
-    line-height:1.9;
-    color:var(--washi);
-    opacity:0.9;
-    margin:0;
-  }
-  .char-count{
-    text-align:right;
-    font-size:11px;
-    color:var(--muted);
-    margin:-10px 0 12px;
-  }
-  .form-error{
-    color:#e08a76;
-    font-size:12px;
-    min-height:16px;
-    margin:0 0 10px;
-  }
-  .loading-box, .error-box{
-    text-align:center;
-    padding:20px 0;
-  }
-  .loading-box p{
-    font-size:13px;
-    color:var(--gold-soft);
-    margin:0 0 8px;
-  }
-  .error-box p{
-    font-size:13px;
-    color:#e08a76;
-    margin:0 0 14px;
-  }
-  .concern-echo{
-    font-size:12px;
-    color:var(--muted);
-    margin:0 0 16px;
-    padding:10px 12px;
-    background:rgba(255,255,255,0.04);
-    border-radius:8px;
-    line-height:1.7;
-  }
-  .overall-box{
-    background:var(--washi);
-    color:var(--ink);
-    border-radius:12px;
-    padding:18px 18px;
-    margin-top:4px;
-  }
-  .overall-box h4{
-    font-family:'Shippori Mincho', serif;
-    font-size:14px;
-    margin:0 0 6px;
-  }
-  .overall-box p{ font-size:13px; line-height:1.9; color:#3a3428; margin:0 0 14px; }
-  .overall-box p:last-child{ margin-bottom:0; }
-  footer{
-    text-align:center;
-    padding:36px 24px 0;
-    font-size:11px;
-    color:var(--muted);
-    letter-spacing:0.05em;
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071008">
+  <meta name="description" content="花札で今日の巡りを知り、過ごし方を選ぶ。無料で一日一回引ける三枚読み。">
+  <title>花札日和｜今日の巡りを、三枚で</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#071008;--bg2:#0c190e;--panel:#101f13;--panel2:#142718;
+      --ink:#e7eadc;--muted:#a9b4a2;--green:#82ba80;--deep:#4c7951;
+      --gold:#c6aa58;--gold2:#8d7535;--line:rgba(190,209,176,.17);
+      --shadow:0 24px 70px rgba(0,0,0,.42);--radius:22px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{margin:0;min-height:100vh;color:var(--ink);font-family:"Noto Serif JP",serif;background:
+      radial-gradient(circle at 12% 0%,rgba(85,139,88,.16),transparent 31rem),
+      radial-gradient(circle at 92% 16%,rgba(197,169,86,.08),transparent 25rem),
+      linear-gradient(150deg,#050b06 0%,var(--bg) 42%,#0a160b 100%);overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.26;background-image:
+      repeating-linear-gradient(95deg,transparent 0 7px,rgba(255,255,255,.012) 8px 9px),
+      repeating-linear-gradient(2deg,transparent 0 13px,rgba(255,255,255,.01) 14px 15px)}
+    button{font:inherit;color:inherit}
+    button:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+    .skip{position:fixed;left:1rem;top:-5rem;z-index:20;background:#fff;color:#111;padding:.6rem 1rem;border-radius:6px}.skip:focus{top:1rem}
+    .shell{width:min(100% - 32px,760px);margin:auto;position:relative;padding:22px 0 70px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:38px}
+    .brand{display:flex;align-items:center;gap:12px}.crest{width:34px;height:34px;border:1px solid rgba(198,170,88,.65);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-family:"Zen Old Mincho";box-shadow:inset 0 0 0 4px rgba(198,170,88,.04)}
+    .brand-name{font-family:"Zen Old Mincho";letter-spacing:.22em;font-size:1rem}.brand-sub{display:block;margin-top:3px;color:var(--muted);font-size:.58rem;letter-spacing:.15em}
+    .sound{border:1px solid var(--line);background:rgba(12,25,14,.64);border-radius:999px;padding:9px 12px;font-size:.75rem;color:var(--muted);cursor:pointer}
+    .hero{text-align:center;padding:22px 4px 42px}.eyebrow{color:var(--gold);font-size:.68rem;letter-spacing:.28em;margin:0 0 15px}.hero h1{font-family:"Zen Old Mincho";font-weight:400;font-size:clamp(2rem,8vw,3.55rem);line-height:1.35;letter-spacing:.08em;margin:0}.hero h1 span{display:block}.lead{max-width:31rem;margin:20px auto 0;color:var(--muted);line-height:2;font-size:.9rem}.date{display:inline-flex;align-items:center;gap:9px;margin-top:22px;padding:8px 14px;border-block:1px solid rgba(198,170,88,.24);font-size:.72rem;color:#c8cfbd;letter-spacing:.11em}
+    .reflection{display:none;background:linear-gradient(135deg,rgba(18,36,21,.9),rgba(10,22,12,.9));border:1px solid var(--line);border-radius:18px;padding:19px 20px;margin:0 auto 22px;box-shadow:var(--shadow)}
+    .reflection.show{display:block}.reflection small{color:var(--gold);letter-spacing:.16em}.reflection p{margin:8px 0 13px;line-height:1.75}.reflection-actions{display:flex;gap:8px;flex-wrap:wrap}.reflection-actions button{background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:.72rem;cursor:pointer}.reflection-actions button:hover{border-color:var(--green)}
+    .stage{position:relative;background:linear-gradient(160deg,rgba(16,31,19,.94),rgba(7,16,8,.94));border:1px solid var(--line);border-radius:var(--radius);padding:30px clamp(16px,5vw,38px) 28px;box-shadow:var(--shadow);overflow:hidden}
+    .stage:after{content:"";position:absolute;inset:9px;border:1px solid rgba(198,170,88,.08);border-radius:16px;pointer-events:none}
+    .stage-head{text-align:center;position:relative;z-index:1}.kicker{color:var(--green);font-size:.68rem;letter-spacing:.24em}.stage h2{font-family:"Zen Old Mincho";font-weight:400;font-size:1.25rem;letter-spacing:.1em;margin:9px 0 7px}.stage-copy{color:var(--muted);font-size:.76rem;line-height:1.8;margin:0}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(9px,3vw,18px);margin:30px auto 26px;max-width:540px;position:relative;z-index:1}
+    .slot{text-align:center;min-width:0}.slot-label{font-size:clamp(.57rem,2vw,.7rem);letter-spacing:.06em;color:#c3cab9;margin-bottom:9px;white-space:nowrap}.card{width:100%;aspect-ratio:92/124;position:relative;perspective:900px;filter:drop-shadow(0 9px 11px rgba(0,0,0,.3))}.card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .72s cubic-bezier(.22,.74,.18,1)}.card.revealed .card-inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:7px;overflow:hidden}.front{transform:rotateY(180deg);background:#101810}.back{display:grid;place-items:center;background:linear-gradient(145deg,#112818,#07120b);border:2px solid #b39143;box-shadow:inset 0 0 0 4px #0b170d,inset 0 0 0 5px rgba(198,170,88,.5)}.back:before{content:"花";display:grid;place-items:center;width:45%;aspect-ratio:1;border:1px solid rgba(198,170,88,.55);border-radius:50%;font-family:"Zen Old Mincho";font-size:clamp(1rem,5vw,1.65rem);color:#bda251;background:rgba(198,170,88,.04)}
+    .draw-wrap{text-align:center;position:relative;z-index:2}.draw{border:1px solid #c5a955;border-radius:999px;background:linear-gradient(180deg,#b99b44,#8b6e28);color:#081009;padding:14px 30px;min-width:220px;font-weight:700;letter-spacing:.1em;cursor:pointer;box-shadow:0 9px 25px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.28);transition:.25s}.draw:hover{transform:translateY(-2px);filter:brightness(1.08)}.draw:disabled{cursor:default;transform:none;filter:saturate(.65);opacity:.72}.once{display:block;margin-top:11px;color:#71806f;font-size:.65rem}
+    .result{display:none;margin-top:24px}.result.show{display:block;animation:rise .65s ease both}.weather{text-align:center;padding:27px 20px 23px;background:radial-gradient(circle at 50% 0%,rgba(198,170,88,.1),transparent 70%);border-bottom:1px solid var(--line)}.weather-label{font-size:.64rem;color:var(--gold);letter-spacing:.25em}.weather h2{font-family:"Zen Old Mincho";font-size:clamp(1.8rem,7vw,2.7rem);font-weight:400;letter-spacing:.12em;margin:9px 0 12px}.weather p{max-width:34rem;margin:auto;color:#c1c9bb;font-size:.85rem;line-height:1.95}
+    .readings{display:grid;gap:12px;margin:18px 0}.reading{background:rgba(15,30,18,.82);border:1px solid var(--line);border-radius:16px;padding:18px 19px}.reading-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.reading-index{color:var(--gold);font-family:"Zen Old Mincho"}.reading-role{font-size:.76rem;letter-spacing:.13em}.reading-card{margin-left:auto;color:var(--green);font-size:.69rem}.reading p{margin:0;color:#bcc5b7;line-height:1.9;font-size:.79rem}
+    .action-box{position:relative;margin-top:14px;padding:25px 22px 23px;border-radius:18px;background:linear-gradient(135deg,rgba(38,63,39,.8),rgba(17,34,21,.92));border:1px solid rgba(130,186,128,.32)}.action-box small{color:#9cc49a;letter-spacing:.2em}.action-box h3{font-family:"Zen Old Mincho";font-weight:400;font-size:1.22rem;margin:10px 0 8px}.action-box p{margin:0;color:#d1d7ca;line-height:1.9;font-size:.83rem}
+    .note{margin:20px auto 0;text-align:center;color:#788575;font-size:.67rem;line-height:1.8}.again{display:block;margin:20px auto 0;border:0;border-bottom:1px solid rgba(198,170,88,.4);background:none;color:#aeb8a9;padding:5px;cursor:pointer;font-size:.7rem}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;background:#e5e8dd;color:#0b140c;border-radius:999px;padding:10px 17px;font-size:.72rem;transition:.3s;z-index:30;pointer-events:none}.toast.show{transform:translate(-50%,0);opacity:1}
+    footer{text-align:center;padding-top:38px;color:#60705f;font-size:.63rem;line-height:1.9}.footer-brand{font-family:"Zen Old Mincho";letter-spacing:.18em;color:#859383;margin-bottom:5px}
+    @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    @media(max-width:480px){.shell{width:min(100% - 22px,760px);padding-top:15px}.hero{padding-top:18px}.stage{padding-inline:12px}.cards{gap:7px}.slot-label{letter-spacing:0}.reading-head{flex-wrap:wrap}.reading-card{width:100%;margin-left:25px}.sound .sound-text{display:none}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card-inner,.draw,.toast{transition:none}.result.show{animation:none}}
+  </style>
 </head>
 <body>
-<div class="page">
+  <a class="skip" href="#drawStage">占いへ進む</a>
+  <main class="shell">
+    <header>
+      <div class="brand"><span class="crest">日</span><span class="brand-name">花札日和<small class="brand-sub">HANAFUDA BIYORI</small></span></div>
+      <button class="sound" id="soundBtn" type="button" aria-pressed="true"><span aria-hidden="true" id="soundIcon">♪</span> <span class="sound-text" id="soundText">音あり</span></button>
+    </header>
 
-  <header>
-    <p class="eyebrow">HANAFUDA BIYORI</p>
-    <h1>花札占い</h1>
-    <p class="lede">十二の月の札から、今日と、これからの流れを読む。</p>
-  </header>
+    <section class="hero" aria-labelledby="heroTitle">
+      <p class="eyebrow">一日一回、無料の三枚読み</p>
+      <h1 id="heroTitle"><span>今日は、どんな</span><span>日和だろう。</span></h1>
+      <p class="lead">巡りを知れば、進む・整える・休むを選びやすくなる。<br>未来を決めるのではなく、今日を選ぶための花札占いです。</p>
+      <div class="date" id="todayLabel" aria-label="今日の日付"></div>
+    </section>
 
-  <div class="stage">
-    <div class="deck" id="deck">
-      <div class="card" id="card0"><div class="face back"></div><div class="face front"><div class="month"></div><div class="suit"></div></div></div>
-      <div class="card" id="card1"><div class="face back"></div><div class="face front"><div class="month"></div><div class="suit"></div></div></div>
-      <div class="card" id="card2"><div class="face back"></div><div class="face front"><div class="month"></div><div class="suit"></div></div></div>
-    </div>
-    <div class="slot-label">状況　―　課題　―　鍵</div>
-
-    <button class="draw-btn" id="drawBtn">札を、めくる</button>
-    <p class="hint">1日1回、今日の流れを確かめる</p>
-  </div>
-
-  <div class="reading" id="reading">
-    <div class="yaku-banner" id="yakuBanner" style="display:none;"></div>
-    <h2 id="readingTitle">―</h2>
-
-    <div class="free-slot">
-      <span class="f-label" id="slot1Label">現在の状況</span>
-      <p class="f-text" id="slot1Text"></p>
-    </div>
-    <div class="free-slot">
-      <span class="f-label" id="slot2Label">乗り越える課題</span>
-      <p class="f-text" id="slot2Text"></p>
-    </div>
-    <div class="free-slot">
-      <span class="f-label" id="slot3Label">流れを変える鍵</span>
-      <p class="f-text" id="slot3Text"></p>
-    </div>
-
-    <div class="overall">
-      <h4>総合メッセージ</h4>
-      <p id="overallText"></p>
-    </div>
-
-    <div class="action">
-      <b>今日の一手</b>
-      <span id="readingAction"></span>
-    </div>
-  </div>
-
-  <div class="premium" id="premiumBox" style="display:none;">
-    <h3>今の悩みを、八つの視点から読み解く</h3>
-    <p>仕事、お金、恋愛、人間関係。今抱えている具体的な悩みを入力すると、八枚の札が状況の全体像と次の一手を示す。</p>
-    <p class="price">八枚読み　980円</p>
-
-    <div id="unlockSection">
-      <div class="unlock-row">
-        <input type="text" id="codeInput" placeholder="購入後に届く鑑定コードを入力">
-        <button id="unlockBtn">確認</button>
+    <section class="reflection" id="reflection" aria-label="昨日の振り返り">
+      <small>昨日から、今日へ</small>
+      <p id="reflectionText"></p>
+      <div class="reflection-actions">
+        <button type="button" data-reflect="できた">できた</button>
+        <button type="button" data-reflect="少しだけ">少しだけ</button>
+        <button type="button" data-reflect="まだ">まだ</button>
       </div>
-      <div class="unlock-msg" id="unlockMsg"></div>
-      <a class="buy-link" id="buyLink" href="#" target="_blank" rel="noopener">八枚読みを購入する　980円 ↗</a>
-    </div>
+    </section>
 
-    <div id="concernSection" style="display:none;">
-      <p class="concern-label">相談ジャンル</p>
-      <div class="category-group" id="categoryGroup">
-        <button type="button" class="cat-btn" data-cat="仕事">仕事</button>
-        <button type="button" class="cat-btn" data-cat="お金">お金</button>
-        <button type="button" class="cat-btn" data-cat="恋愛">恋愛</button>
-        <button type="button" class="cat-btn" data-cat="人間関係">人間関係</button>
-        <button type="button" class="cat-btn" data-cat="これからの流れ">これからの流れ</button>
-        <button type="button" class="cat-btn" data-cat="その他">その他</button>
+    <section class="stage" id="drawStage" aria-labelledby="drawTitle">
+      <div class="stage-head">
+        <span class="kicker">本日の三枚読み</span>
+        <h2 id="drawTitle">心にひとつ、今日の問いを</h2>
+        <p class="stage-copy">答えを急がず、ひと呼吸してから札をめくってください。</p>
       </div>
-      <p class="concern-label">相談内容(必須)</p>
-      <textarea id="concernInput" rows="4" maxlength="400" placeholder="今、いちばん気になっていることを具体的に書いてください"></textarea>
-      <p class="char-count" id="charCount">0 / 400</p>
-      <div class="form-error" id="formError"></div>
-      <button class="draw-btn" id="premiumDrawBtn">八枚読みを、鑑定してもらう</button>
-    </div>
+      <div class="cards" id="cards" aria-live="polite">
+        <div class="slot"><div class="slot-label">今日の空模様</div><div class="card" id="card0"><div class="card-inner"><div class="face back"></div><div class="face front"></div></div></div></div>
+        <div class="slot"><div class="slot-label">いまの現在地</div><div class="card" id="card1"><div class="card-inner"><div class="face back"></div><div class="face front"></div></div></div></div>
+        <div class="slot"><div class="slot-label">今日の一手</div><div class="card" id="card2"><div class="card-inner"><div class="face back"></div><div class="face front"></div></div></div></div>
+      </div>
+      <div class="draw-wrap">
+        <button class="draw" id="drawBtn" type="button">今日の札を、めくる</button>
+        <span class="once">同じ日は、同じ三枚が現れます</span>
+      </div>
+    </section>
 
-    <div class="loading-box" id="loadingBox" style="display:none;">
-      <p>鑑定中です。しばらくお待ちください…</p>
-    </div>
+    <section class="result" id="result" aria-labelledby="weatherTitle">
+      <div class="weather">
+        <span class="weather-label">今日の日和</span>
+        <h2 id="weatherTitle"></h2>
+        <p id="weatherMessage"></p>
+      </div>
+      <div class="readings" id="readings"></div>
+      <div class="action-box">
+        <small>今日の一手</small>
+        <h3 id="actionTitle"></h3>
+        <p id="actionText"></p>
+      </div>
+      <p class="note">札は未来を決めるものではありません。<br>今日を自分で選ぶための、小さな手がかりとしてお楽しみください。</p>
+      <button class="again" id="againBtn" type="button">三枚をもう一度見る</button>
+    </section>
 
-    <div class="error-box" id="errorBox" style="display:none;">
-      <p id="errorText"></p>
-      <button class="draw-btn" id="retryBtn">もう一度試す</button>
-    </div>
+    <footer><div class="footer-brand">花札日和</div>巡りを知って、過ごし方を選ぶ。</footer>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
 
-    <div class="premium-content" id="premiumContent"></div>
-  </div>
+  <script>
+  (()=>{
+    'use strict';
+    const CARDS=[
+      [1,'光','松に鶴','睦月','#0e2010','#b0d8a0','木','高い視点・長く続く縁'],[1,'短冊','松の赤短','睦月','#0e2010','#f0a0a0','木','言葉にして届く兆し'],[1,'カス','松のカス一','睦月','#0e2010','#7ab07a','木','地道な積み重ね'],[1,'カス','松のカス二','睦月','#0e2010','#6aa06a','木','続けることで育つ力'],
+      [2,'種','梅に鶯','如月','#1a0812','#f4a8b8','木','待った先に聞こえる知らせ'],[2,'短冊','梅の赤短','如月','#1a0812','#f09090','木','素直な思いを伝える'],[2,'カス','梅のカス一','如月','#1a0812','#d898a8','木','小さな気づき'],[2,'カス','梅のカス二','如月','#1a0812','#c88898','木','見えないところでの芽吹き'],
+      [3,'光','桜に幕','弥生','#200a14','#f8c8d8','木','人前に出る・節目を祝う'],[3,'短冊','桜の赤短','弥生','#200a14','#f098b0','木','今だけの輝きを味わう'],[3,'カス','桜のカス一','弥生','#200a14','#e0a8b8','木','移ろいの中の美しさ'],[3,'カス','桜のカス二','弥生','#200a14','#d098a8','木','流れに逆らわない'],
+      [4,'種','藤に杜鵑','卯月','#180e28','#c8b8f0','木','遠くから届く合図'],[4,'短冊','藤の短冊','卯月','#180e28','#b8a8e0','木','しなやかな言葉'],[4,'カス','藤のカス一','卯月','#180e28','#a898d0','木','力を抜いて保つ'],[4,'カス','藤のカス二','卯月','#180e28','#9888c0','木','静かな変化'],
+      [5,'種','菖蒲に八橋','皐月','#0e1e08','#a0d898','火','境目を渡る決意'],[5,'短冊','菖蒲の短冊','皐月','#0e1e08','#88c880','火','決意を言葉にする'],[5,'カス','菖蒲のカス一','皐月','#0e1e08','#78b870','火','余計なものを払う'],[5,'カス','菖蒲のカス二','皐月','#0e1e08','#68a860','火','足元を確かめる'],
+      [6,'種','牡丹に蝶','水無月','#200412','#f8b0d0','火','姿を変えてひらく'],[6,'短冊','牡丹の青短','水無月','#200412','#98b8e8','火','品よく境界を示す'],[6,'カス','牡丹のカス一','水無月','#200412','#e098b8','火','小さな豊かさ'],[6,'カス','牡丹のカス二','水無月','#200412','#d088a8','火','自分を丁寧に扱う'],
+      [7,'種','萩に猪','文月','#201408','#e8c078','土','迷いを越える勢い'],[7,'短冊','萩の短冊','文月','#201408','#d8b068','土','変化を告げる言葉'],[7,'カス','萩のカス一','文月','#201408','#c8a058','土','移ろいを受け入れる'],[7,'カス','萩のカス二','文月','#201408','#b89048','土','焦らず進む'],
+      [8,'光','芒に月','葉月','#0a1020','#c8d0f0','金','静けさの中で見渡す'],[8,'種','芒に雁','葉月','#0a1020','#a8b8e0','金','視点を変えて旅立つ'],[8,'カス','芒のカス一','葉月','#0a1020','#7888c0','金','余白から生まれる知恵'],[8,'カス','芒のカス二','葉月','#0a1020','#6878b0','金','自然体に戻る'],
+      [9,'種','菊に盃','長月','#1e1804','#f0e898','金','積み重ねを味わう'],[9,'短冊','菊の青短','長月','#1e1804','#98c898','金','まっすぐな言葉'],[9,'カス','菊のカス一','長月','#1e1804','#d0c878','金','日々の誠実さ'],[9,'カス','菊のカス二','長月','#1e1804','#c0b868','金','急がず実る'],
+      [10,'種','紅葉に鹿','神無月','#1e0a04','#f0a868','金','気配に耳を澄ます'],[10,'短冊','紅葉の青短','神無月','#1e0a04','#88c088','金','実りを受け取る言葉'],[10,'カス','紅葉のカス一','神無月','#1e0a04','#e09058','金','変化の色を楽しむ'],[10,'カス','紅葉のカス二','神無月','#1e0a04','#d08048','金','落ち着きと成熟'],
+      [11,'光','柳に小野道風','霜月','#041610','#98e0b0','水','繰り返しから掴む気づき'],[11,'種','柳に燕','霜月','#041610','#78c890','水','軽やかに動く'],[11,'短冊','柳の短冊','霜月','#041610','#58b070','水','柔らかく伝える'],[11,'カス','柳のカス','霜月','#041610','#389850','水','雨宿りして整える'],
+      [12,'光','桐に鳳凰','師走','#100818','#c8b8e8','水','一区切りと新しい始まり'],[12,'カス','桐のカス一','師走','#100818','#a898d0','水','終わらせて備える'],[12,'カス','桐のカス二','師走','#100818','#9888c0','水','静かに切り替える'],[12,'カス','桐のカス三','師走','#100818','#8878b0','水','見えない準備をする']
+    ].map((v,i)=>({id:i,month:v[0],rank:v[1],name:v[2],mj:v[3],cl:v[4],ac:v[5],el:v[6],desc:v[7]}));
 
-  <footer>花札日和 ― 十二か月の札で読む、今日の流れ</footer>
-</div>
+    const ROLES=[
+      {name:'今日の空模様',lead:'一日の背景には',tails:['という気配があります。無理に逆らわず、まず流れを眺めてみて。','という巡りが流れています。急いで結論を出す必要はありません。','という色合いがあります。今日の判断の背景として覚えておいて。']},
+      {name:'いまの現在地',lead:'今のあなたには',tails:['が映っています。すでに持っている力を見落とさないで。','が重なっています。心と身体の速度をそろえると見えやすくなります。','が現れています。正しさより、今の手触りを確かめて。']},
+      {name:'今日の一手',lead:'次の一歩には',tails:['が鍵になります。大きく動くより、ひとつだけ形にして。','を選ぶと流れに乗れそうです。できる範囲の小ささで十分。','を意識してみて。今日中に終えなくても、始めれば巡りは動きます。']}
+    ];
+    const ACTIONS={
+      木:['気になっていたことを、五分だけ始める','机や予定に、ひとつ新しい余白をつくる','育てたいものを一行だけ書き出す'],
+      火:['返したかった言葉を、短くひとつ届ける','身体を温めてから、一番大切な用事に触れる','迷っている二択に仮の期限を置く'],
+      土:['足元をひとつ整える','今日やらないことを、ひとつ決める','温かいものをゆっくり味わう'],
+      金:['使っていないものを、ひとつ手放す','判断材料を三つまでに絞る','曖昧な予定をひとつ言葉にする'],
+      水:['予定の間に十分の余白を置く','答えを出す前に、静かな場所で三呼吸する','今の気持ちを誰にも見せない一行にする']
+    };
+    const WEATHER={
+      '追い風':{msg:'動きながら輪郭が見えてくる日。完璧な準備を待つより、小さな一歩を選ぶと流れが味方します。'},
+      '凪の日':{msg:'大きく動かなくても整っていく日。手応えの薄さを不安にせず、今あるものを丁寧に扱って。'},
+      '雨宿り':{msg:'外へ答えを探すより、いったん内側を整える日。休むことも、巡りを進める立派な選択です。'},
+      '切替日和':{msg:'古い流れと新しい流れの境目にいる日。全部を変えず、ひとつだけ選び直してみて。'},
+      '仕込み日和':{msg:'まだ見えないところで物事が育つ日。成果を急がず、明日の自分が助かる準備をひとつ。'}
+    };
+    const STORAGE='hanabiyori.free.v2';
+    const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+    const state={sound:true,today:keyFor(new Date()),draw:null,revealing:false};
 
-<script>
-// ============================================================
-// 花札12ヶ月の意味データ(このデータ自体は変更していない)
-// ============================================================
-const SUITS = [
-  {month:"一月", name:"松", short:"変わらぬ土台。今ある基盤を信じて動いていい時期。", long:"松は一年を通して緑を絶やさない、変わらないものの象徴。今のあなたの状況は、派手さはなくとも土台が固まっている。焦って作り変える必要はなく、今ある関係・仕組みをどう活かすかが焦点になる。", action:"今日は新しいことより、今ある手札の点検を。"},
-  {month:"二月", name:"梅", short:"寒さの中の先駆け。まだ結果は出ないが、動き出す価値はある。", long:"梅は雪の残る中で一番早く咲く花。周りがまだ動いていない今だからこそ、先に手をつけたことが後で効いてくる。結果はすぐに出なくても、種はもう蒔かれている。", action:"誰よりも先に、小さな一歩を踏み出す。"},
-  {month:"三月", name:"桜", short:"短い盛り。今の勢いは長くは続かない、今のうちに動く。", long:"桜は満開の期間が短い。今、勢いや注目が集まっているなら、それは長続きしない前提で動くべき局面。判断を先延ばしにすると、機会そのものが散ってしまう。", action:"迷っている案件、今日中に一つ結論を出す。"},
-  {month:"四月", name:"藤", short:"つながりの中で伸びる。一人で抱えず、誰かに預ける時期。", long:"藤は他の木に絡みつきながら高く伸びる植物。今のあなたに必要なのは、自力ですべて解決することではなく、誰かとの繋がりを頼ること。一人で背負っている何かを、少し手放していい。", action:"今日、誰か一人に「頼み事」を一つしてみる。"},
-  {month:"五月", name:"菖蒲", short:"筋を通す力が問われる。曖昧にしていたことに白黒つける時。", long:"菖蒲は「勝負」や「尚武」に通じる札。今のあなたは、どこかで曖昧にしてきた判断に決着をつけるべき局面にいる。角が立つことを恐れず、筋を通した方が長期的には楽になる。", action:"先延ばしにしている「はい/いいえ」の返事を、今日出す。"},
-  {month:"六月", name:"牡丹", short:"華やかさが力になる。今は控えめより、目立って良い時期。", long:"牡丹は「花の王」と呼ばれる存在感の象徴。今は謙遜して控えめにいる時期ではなく、自分の仕事や考えを堂々と外に出していい局面。遠慮が、むしろ機会を逃す原因になる。", action:"今日やったことを、誰かに一言でいいから見せる。"},
-  {month:"七月", name:"萩", short:"地味な積み重ねが後で効く。派手さのない努力を続けて良い。", long:"萩は目立たないが、根を張って毎年花をつける植物。今の状況は評価されにくいかもしれないが、その積み重ねは無駄になっていない。焦らず淡々と続けることが最終的に一番強い。", action:"地味だが後回しにしていた作業を一つ片付ける。"},
-  {month:"八月", name:"芒", short:"視界が開ける。全体を見渡して、方向を決め直す時。", long:"芒(すすき)は秋の見晴らしの良さの象徴。今は細部にこだわるより、少し引いて全体を見渡すべき局面。今のやり方をこのまま続けるべきか、方向を変えるべきか、俯瞰する時間を取る価値がある。", action:"今日は5分だけ、今後3ヶ月の予定を紙に書き出す。"},
-  {month:"九月", name:"菊", short:"長く続けてきたものが実を結び始める。評価を受け取っていい。", long:"菊は長寿と気品の象徴。これまで積み重ねてきたことが、少しずつ形になり始めている時期。謙遜しすぎず、来た評価や結果を素直に受け取ることが、次の意欲につながる。", action:"最近の小さな成果を一つ、自分で認めてあげる。"},
-  {month:"十月", name:"紅葉", short:"終わりが近い何かがある。惜しまず区切りをつけていい。", long:"紅葉は散る前に一番美しく色づく。今関わっている何か(仕事のやり方、関係、習慣)は、終わりに近づいているサインかもしれない。しがみつくより、綺麗に区切りをつけた方が次に進みやすい。", action:"やめどきを感じているものを、一つ紙に書き出す。"},
-  {month:"十一月", name:"柳", short:"しなやかさが武器になる。強引に押すより、受け流していい。", long:"柳は強い風にも折れず、しなって受け流す。今の局面で正面からぶつかるのは得策ではない。相手や状況に合わせて形を変えながら、最終的な目的だけはブラさない柔軟さが求められる。", action:"一つだけ、自分のやり方に固執せず譲ってみる。"},
-  {month:"十二月", name:"桐", short:"一区切りと、次への準備。今年の総括をする時期。", long:"桐は箪笥にもなる、次の世代へ受け継ぐ木。今は一つのサイクルの締めくくりであり、同時に次の準備を始める時期でもある。今年やったことを棚卸しし、来期に何を持ち越すか整理すると良い。", action:"今日、今年やり切ったことを3つ書き出す。"},
-];
+    function keyFor(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+    function previousKey(){const d=new Date();d.setDate(d.getDate()-1);return keyFor(d)}
+    function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+    function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+    function data(){try{return JSON.parse(localStorage.getItem(STORAGE))||{}}catch(e){return{}}}
+    function save(v){try{localStorage.setItem(STORAGE,JSON.stringify(v))}catch(e){}}
+    function seededDraw(){const r=rng(hash('花札日和:'+state.today));const pool=[...CARDS];for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}return{ids:pool.slice(0,3).map(c=>c.id),variant:Math.floor(r()*3),created:Date.now()}}
+    function weather(cards){const high=cards.filter(c=>c.rank==='光'||c.rank==='種').length;const low=cards.filter(c=>c.rank==='カス').length;const months=cards.map(c=>c.month);if(high>=2)return'追い風';if(cards.some(c=>c.month===11)||cards.filter(c=>c.el==='水').length>=2)return'雨宿り';if(Math.max(...months)-Math.min(...months)>=8)return'切替日和';if(low===3)return'仕込み日和';return'凪の日'}
 
-const SLOT_LABEL = ["現在の状況","乗り越える課題","流れを変える鍵"];
-const PREMIUM_LABELS = [
-  "現在の状況","表面に見えている課題","まだ気づいていない背景","自分自身の状態",
-  "相手・周囲の状態","環境から受ける影響","流れを変える鍵","このまま進んだ場合の結末"
-];
-
-// ============================================================
-// 購入導線・解放判定 まわりの設定
-// (この節はあとでサーバー側処理に切り出す前提なので、他の処理から分離してある)
-// ============================================================
-
-// ▼1日1回制限。false にすると制限を解除できる(開発・確認用)
-const DAILY_LIMIT_ENABLED = true;
-
-// ============================================================
-// 抽選ロジック(重複なし)
-// ============================================================
-function pickUniqueN(n, excludeNames){
-  const pool = SUITS.filter(s => !excludeNames || !excludeNames.includes(s.name));
-  const arr = [...pool];
-  const out = [];
-  for(let i=0;i<n && arr.length>0;i++){
-    const idx = Math.floor(Math.random()*arr.length);
-    out.push(arr.splice(idx,1)[0]);
-  }
-  return out;
-}
-
-// ============================================================
-// 役判定(12ヶ月の月札データに対応した簡易判定)
-// ============================================================
-function detectYaku(picks){
-  const names = new Set(picks.map(p=>p.name));
-  const has = n => names.has(n);
-  const hikari = ["松","桜","芒","柳","桐"];
-  const hikariCount = hikari.filter(has).length;
-  const results = [];
-  if(hikariCount === 5){
-    results.push({name:"五光", desc:"最上級の吉兆。今の流れ全体が大きく開いていく暗示。"});
-  } else if(hikariCount === 4){
-    results.push({name:"四光", desc:"かなりの好調気配。ここぞという場面で強気に出ていい時期。"});
-  }
-  if(has("萩") && has("紅葉") && has("牡丹")){
-    results.push({name:"猪鹿蝶", desc:"人・環境・自分自身、三つの力が噛み合うサイン。動くなら今。"});
-  }
-  if(has("桜") && has("菊")){
-    results.push({name:"花見で一杯", desc:"根を詰めすぎている頃合い。労をねぎらい、一息つく価値がある。"});
-  }
-  if(has("芒") && has("菊")){
-    results.push({name:"月見で一杯", desc:"急ぐ場面ではない。静かに現状を噛みしめていい時。"});
-  }
-  if(has("松") && has("梅") && has("桜")){
-    results.push({name:"赤短", desc:"言葉と見せ方に気を配ると、流れがもう一段良くなる暗示。"});
-  }
-  if(has("牡丹") && has("菊") && has("紅葉")){
-    results.push({name:"青短", desc:"落ち着きと品位がそのまま評価に繋がる時期。慎重さが武器になる。"});
-  }
-  return results;
-}
-
-function yakuInnerHtml(yaku){
-  return yaku.map(y=>`${y.name} 成立<span class="desc">${y.desc}</span>`)
-    .join('<hr style="border:none;border-top:1px solid rgba(42,31,16,0.2);margin:8px 0;">');
-}
-
-// ============================================================
-// 1日1回制限(localStorage。プレビュー環境等で使えない場合は自動的に無効化される)
-// ============================================================
-function getTodayStr(){
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-}
-const DAILY_KEY = 'hanabiyori-daily-v1';
-
-function loadTodayFreeReading(){
-  if(!DAILY_LIMIT_ENABLED) return null;
-  try{
-    const raw = localStorage.getItem(DAILY_KEY);
-    if(!raw) return null;
-    const data = JSON.parse(raw);
-    if(data.date !== getTodayStr()) return null;
-    const restored = data.names.map(n => SUITS.find(s=>s.name===n)).filter(Boolean);
-    return restored.length === data.names.length ? restored : null;
-  }catch(e){ return null; }
-}
-function saveTodayFreeReading(picks){
-  if(!DAILY_LIMIT_ENABLED) return;
-  try{
-    localStorage.setItem(DAILY_KEY, JSON.stringify({date:getTodayStr(), names:picks.map(p=>p.name)}));
-  }catch(e){ /* localStorageが使えない環境では単に保存しない */ }
-}
-
-// ============================================================
-// 無料の三枚読み
-// ============================================================
-const drawBtn = document.getElementById('drawBtn');
-const reading = document.getElementById('reading');
-const premiumBox = document.getElementById('premiumBox');
-const yakuBanner = document.getElementById('yakuBanner');
-
-function buildFreeOverall(picks){
-  return `${picks[0].short} そのうえで、${picks[1].short} 最後に効いてくるのは、${picks[2].short}`;
-}
-
-function renderFreeReading(picks, animate){
-  const doRender = ()=>{
-    document.getElementById('readingTitle').textContent = `${picks[0].name} ・ ${picks[1].name} ・ ${picks[2].name}`;
-    document.getElementById('slot1Label').textContent = SLOT_LABEL[0];
-    document.getElementById('slot1Text').textContent = picks[0].short;
-    document.getElementById('slot2Label').textContent = SLOT_LABEL[1];
-    document.getElementById('slot2Text').textContent = picks[1].short;
-    document.getElementById('slot3Label').textContent = SLOT_LABEL[2];
-    document.getElementById('slot3Text').textContent = picks[2].short;
-    document.getElementById('overallText').textContent = buildFreeOverall(picks);
-    document.getElementById('readingAction').textContent = picks[2].action;
-
-    const yaku = detectYaku(picks);
-    if(yaku.length){
-      yakuBanner.innerHTML = yakuInnerHtml(yaku);
-      yakuBanner.style.display = 'block';
-    } else {
-      yakuBanner.style.display = 'none';
+    function cardSvg(c){
+      const motif={1:'M28 79 Q46 28 64 79',2:'M20 84 Q42 45 67 25',3:'M24 72 Q47 28 69 72',4:'M18 24 Q46 44 74 24',5:'M28 82 L30 30 M45 82 L46 24 M62 82 L60 31',6:'M23 52 Q46 22 69 52 Q46 75 23 52',7:'M25 82 Q37 55 29 30 M51 82 Q64 55 56 30',8:'M10 72 Q34 58 53 66 Q68 75 82 59',9:'M46 22 C67 24 69 58 46 71 C23 58 25 24 46 22',10:'M15 82 Q31 52 46 35 Q63 52 77 82',11:'M46 15 Q64 42 46 70 Q28 42 46 15',12:'M21 78 L46 21 L71 78'}[c.month];
+      const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
+      return `<svg viewBox="0 0 92 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}、${c.rank}"><rect width="92" height="124" fill="${c.cl}" rx="5"/><rect x="3" y="3" width="86" height="118" rx="3" fill="none" stroke="${c.ac}" stroke-width="${c.rank==='光'?1.4:.7}" opacity=".62"/>${center}<path d="${motif}" stroke="${c.ac}" stroke-width="1.45" fill="none" opacity=".42"/><rect x="3" y="85" width="86" height="36" fill="${c.ac}" opacity=".11"/><line x1="3" y1="85" x2="89" y2="85" stroke="${c.ac}" opacity=".35"/><text x="46" y="100" text-anchor="middle" font-size="6.4" fill="${c.ac}" font-family="serif" font-weight="bold">${c.name}</text><text x="46" y="115" text-anchor="middle" font-size="5.1" fill="${c.ac}" opacity=".7" font-family="serif">${c.mj}　${c.rank}</text></svg>`
     }
-
-    reading.classList.add('show');
-    premiumBox.style.display = 'block';
-    window.__lastPicks = picks;
-  };
-
-  picks.forEach((s, i)=>{
-    const card = document.getElementById('card'+i);
-    const front = card.querySelector('.front');
-    front.querySelector('.month').textContent = s.month;
-    front.querySelector('.suit').textContent = s.name;
-    if(animate){
-      card.classList.remove('flipped');
-      setTimeout(()=>card.classList.add('flipped'), 250*i);
-    } else {
-      card.classList.add('flipped');
+    function pashi(){if(!state.sound)return;try{const A=window.AudioContext||window.webkitAudioContext;const ctx=pashi.ctx||(pashi.ctx=new A());const b=ctx.createBuffer(1,ctx.sampleRate*.075,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++){const t=i/ctx.sampleRate;d[i]=(Math.random()*2-1)*Math.exp(-t*78)*.55}const s=ctx.createBufferSource(),g=ctx.createGain();g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.075);s.buffer=b;s.connect(g);g.connect(ctx.destination);s.start()}catch(e){}}
+    function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
+    function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
+    function formatDate(){const d=new Date(),jp=new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'long'}).format(d);$('#todayLabel').textContent=jp+' の巡り'}
+    function prepare(){
+      const stored=data();state.sound=stored.sound!==false;updateSound();
+      state.draw=stored.days?.[state.today]||seededDraw();
+      state.draw.ids.map(id=>CARDS[id]).forEach((c,i)=>$('#card'+i+' .front').innerHTML=cardSvg(c));
+      const yesterday=stored.days?.[previousKey()];if(yesterday&&!yesterday.reflection){const cards=yesterday.ids.map(id=>CARDS[id]);$('#reflectionText').textContent=`昨日の「${makeAction(cards,yesterday.variant).title}」は、どうでしたか？`;$('#reflection').classList.add('show')}
+      if(stored.days?.[state.today])render(false);
     }
-  });
-
-  if(animate){ setTimeout(doRender, 900); } else { doRender(); }
-}
-
-drawBtn.addEventListener('click', ()=>{
-  drawBtn.disabled = true;
-  const picks = pickUniqueN(3);
-  renderFreeReading(picks, true);
-  saveTodayFreeReading(picks);
-  setTimeout(()=>{
-    if(DAILY_LIMIT_ENABLED){
-      drawBtn.textContent = "本日は占い済み(また明日)";
-      drawBtn.disabled = true;
-    } else {
-      drawBtn.textContent = "もう一度、めくる";
-      drawBtn.disabled = false;
+    function makeAction(cards,variant){const key=cards[2].el,choice=ACTIONS[key][variant%ACTIONS[key].length];return{title:choice,text:`「${cards[2].name}」が示すのは、${cards[2].desc}。全部を変えようとせず、${choice}ことから始めてみましょう。`}}
+    function render(animate=true){
+      if(state.revealing)return;state.revealing=true;const cards=state.draw.ids.map(id=>CARDS[id]);
+      cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');pashi();vibrate()};animate?setTimeout(reveal,180+i*430):reveal()});
+      const delay=animate?1550:30;setTimeout(()=>{
+        const w=weather(cards);$('#weatherTitle').textContent=w;$('#weatherMessage').textContent=WEATHER[w].msg;
+        $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p></article>`).join('');
+        const a=makeAction(cards,state.draw.variant);$('#actionTitle').textContent=a.title;$('#actionText').textContent=a.text;$('#result').classList.add('show');$('#drawBtn').textContent='本日は占い済み';$('#drawBtn').disabled=true;state.revealing=false;
+        const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored);
+        if(animate)$('#result').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+      },delay)
     }
-  }, 950);
-});
-
-// ページを開いた時、今日すでに占っていたら同じ結果を復元する
-(function initToday(){
-  const existing = loadTodayFreeReading();
-  if(existing){
-    renderFreeReading(existing, false);
-    drawBtn.textContent = "本日は占い済み(また明日)";
-    drawBtn.disabled = true;
-  }
-})();
-
-// ============================================================
-// 有料の八枚読み(AI鑑定。Netlify Functions経由)
-// ============================================================
-
-// ▼購入リンク(Stripe Payment LinkのURLが決まったらここを差し替える)
-const PURCHASE_URL = "https://your-base-shop.example.com/items/hanabiyori-8";
-
-document.getElementById('buyLink').href = PURCHASE_URL;
-
-const unlockSection = document.getElementById('unlockSection');
-const concernSection = document.getElementById('concernSection');
-const loadingBox = document.getElementById('loadingBox');
-const errorBox = document.getElementById('errorBox');
-const formError = document.getElementById('formError');
-const concernInput = document.getElementById('concernInput');
-const charCount = document.getElementById('charCount');
-const CONCERN_MAX = 400;
-let selectedCategory = null;
-let currentToken = null;
-
-concernInput.addEventListener('input', ()=>{
-  charCount.textContent = `${concernInput.value.length} / ${CONCERN_MAX}`;
-});
-
-document.querySelectorAll('.cat-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedCategory = btn.dataset.cat;
-  });
-});
-
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-document.getElementById('unlockBtn').addEventListener('click', async ()=>{
-  const input = document.getElementById('codeInput').value.trim();
-  const msg = document.getElementById('unlockMsg');
-  if(!input){
-    msg.textContent = "コードを入力してください。";
-    msg.className = "unlock-msg err";
-    return;
-  }
-  msg.textContent = "確認しています…";
-  msg.className = "unlock-msg";
-  try{
-    const res = await fetch(`/.netlify/functions/verify-entitlement?token=${encodeURIComponent(input)}`);
-    const data = await res.json();
-    if(!data.valid){
-      msg.textContent = "コードが見つかりません。購入時のコードをご確認ください。";
-      msg.className = "unlock-msg err";
-      return;
-    }
-    currentToken = input;
-    msg.textContent = "確認できました。相談内容を入力してください。";
-    msg.className = "unlock-msg ok";
-    unlockSection.style.display = 'none';
-    concernSection.style.display = 'block';
-  }catch(e){
-    msg.textContent = "通信に失敗しました。しばらくしてからもう一度お試しください。";
-    msg.className = "unlock-msg err";
-  }
-});
-
-function renderPremiumResult(result){
-  const content = document.getElementById('premiumContent');
-  const yaku = result.yaku || [];
-  const yakuHtml = yaku.length
-    ? `<div class="yaku-banner">${yaku.map(y=>`${y.name} 成立<span class="desc">${y.desc}</span>`).join('<hr style="border:none;border-top:1px solid rgba(42,31,16,0.2);margin:8px 0;">')}</div>`
-    : '';
-
-  const r = result.result || {};
-  const cardResults = Array.isArray(r.cards) ? r.cards : [];
-
-  const gridHtml = `<div class="premium-grid">${(result.cards || []).map((c,i)=>`
-    <div class="premium-tile">
-      <div class="tile-label">${i+1}. ${(cardResults[i] && cardResults[i].role) || ''}</div>
-      <div class="tile-month">${c.month}</div>
-      <div class="tile-suit">${c.name}</div>
-    </div>
-  `).join('')}</div>`;
-
-  const detailHtml = `<div class="premium-detail">${cardResults.map((c,i)=>`
-    <div class="detail-row">
-      <span class="d-label">${i+1}. ${escapeHtml(c.role || '')}</span>
-      <p class="d-text">${escapeHtml(c.interpretation || '')}</p>
-    </div>
-  `).join('')}</div>`;
-
-  const overallHtml = `
-    <div class="overall-box">
-      <h4>総合メッセージ</h4>
-      <p>${escapeHtml(r.overall || '')}</p>
-      <h4>今すぐできる一手</h4>
-      <p>${escapeHtml(r.nextAction || '')}</p>
-      ${r.caution ? `<h4>気をつけること</h4><p>${escapeHtml(r.caution)}</p>` : ''}
-    </div>
-  `;
-
-  content.innerHTML = yakuHtml + gridHtml + detailHtml + overallHtml;
-  content.classList.add('show');
-}
-
-async function submitReading(){
-  const concern = concernInput.value.trim();
-  formError.textContent = '';
-
-  if(!concern){
-    formError.textContent = "相談内容を入力してください。";
-    return;
-  }
-  if(concern.length > CONCERN_MAX){
-    formError.textContent = `相談内容は${CONCERN_MAX}文字以内にしてください。`;
-    return;
-  }
-  if(!currentToken){
-    formError.textContent = "コードの確認からやり直してください。";
-    return;
-  }
-
-  const category = selectedCategory || 'その他';
-  concernSection.style.display = 'none';
-  loadingBox.style.display = 'block';
-  errorBox.style.display = 'none';
-
-  try{
-    const res = await fetch('/.netlify/functions/generate-reading', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ token: currentToken, category, concern })
-    });
-    const data = await res.json();
-    loadingBox.style.display = 'none';
-    if(!res.ok){
-      document.getElementById('errorText').textContent = data.error || "鑑定に失敗しました。";
-      errorBox.style.display = 'block';
-      return;
-    }
-    renderPremiumResult(data);
-  }catch(e){
-    loadingBox.style.display = 'none';
-    document.getElementById('errorText').textContent = "通信に失敗しました。電波状況を確認し、もう一度お試しください。";
-    errorBox.style.display = 'block';
-  }
-}
-
-document.getElementById('premiumDrawBtn').addEventListener('click', submitReading);
-document.getElementById('retryBtn').addEventListener('click', ()=>{
-  errorBox.style.display = 'none';
-  concernSection.style.display = 'block';
-});
-</script>
+    function updateSound(){const on=state.sound;$('#soundBtn').setAttribute('aria-pressed',String(on));$('#soundIcon').textContent=on?'♪':'×';$('#soundText').textContent=on?'音あり':'消音'}
+    $('#drawBtn').addEventListener('click',()=>render(true));
+    $('#againBtn').addEventListener('click',()=>$('#drawStage').scrollIntoView({behavior:'smooth'}));
+    $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
+    $$('.reflection-actions button').forEach(b=>b.addEventListener('click',()=>{const stored=data(),d=stored.days?.[previousKey()];if(d){d.reflection=b.dataset.reflect;save(stored)}$('#reflection').classList.remove('show');showToast('昨日の記録を残しました')}));
+    formatDate();prepare();
+  })();
+  </script>
 </body>
 </html>
