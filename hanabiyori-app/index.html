@@ -51,6 +51,7 @@
     @media(max-width:480px){.shell{width:min(100% - 22px,760px);padding-top:15px}.hero{padding-top:18px}.stage{padding-inline:12px}.cards{gap:7px}.slot-label{letter-spacing:0}.reading-head{flex-wrap:wrap}.reading-card{width:100%;margin-left:25px}.sound .sound-text{display:none}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card-inner,.draw,.toast{transition:none}.result.show{animation:none}}
   </style>
+  <link rel="stylesheet" href="auth-ui.css">
 </head>
 <body>
   <a class="skip" href="#drawStage">占いへ進む</a>
@@ -58,7 +59,9 @@
     <header>
       <div class="brand"><span class="crest">日</span><span class="brand-name">花札日和<small class="brand-sub">HANAFUDA BIYORI</small></span></div>
       <button class="sound" id="soundBtn" type="button" aria-pressed="true"><span aria-hidden="true" id="soundIcon">♪</span> <span class="sound-text" id="soundText">音あり</span></button>
+      <button class="sound" id="accountToggle" type="button" aria-controls="accountPanel" aria-expanded="false">ログイン／マイページ</button>
     </header>
+    <section id="accountPanel" class="account-panel" aria-label="ログイン・マイページ" hidden></section>
 
     <section class="hero" aria-labelledby="heroTitle">
       <p class="eyebrow">一日一回、無料の三枚読み</p>
@@ -200,5 +203,6 @@
     formatDate();prepare();
   })();
   </script>
+  <script type="module" src="auth-ui.js"></script>
 </body>
 </html>
