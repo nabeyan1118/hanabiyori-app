@@ -1,0 +1,410 @@
+[
+  {
+    "id": 36,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 1,
+    "box": [
+      213,
+      14,
+      474,
+      422
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 48131
+  },
+  {
+    "id": 37,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 2,
+    "box": [
+      515,
+      14,
+      776,
+      422
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 50766
+  },
+  {
+    "id": 40,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 3,
+    "box": [
+      817,
+      14,
+      1077,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 48049
+  },
+  {
+    "id": 41,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 4,
+    "box": [
+      213,
+      436,
+      474,
+      844
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 47765
+  },
+  {
+    "id": 42,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 5,
+    "box": [
+      515,
+      436,
+      776,
+      844
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 45855
+  },
+  {
+    "id": 44,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 6,
+    "box": [
+      817,
+      436,
+      1077,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 52621
+  },
+  {
+    "id": 24,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 1,
+    "box": [
+      214,
+      13,
+      474,
+      422
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 55100
+  },
+  {
+    "id": 25,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 2,
+    "box": [
+      516,
+      14,
+      775,
+      422
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 54542
+  },
+  {
+    "id": 28,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 3,
+    "box": [
+      817,
+      14,
+      1077,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 50091
+  },
+  {
+    "id": 29,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 4,
+    "box": [
+      214,
+      436,
+      474,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 51342
+  },
+  {
+    "id": 32,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 5,
+    "box": [
+      516,
+      436,
+      775,
+      844
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 53448
+  },
+  {
+    "id": 33,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 6,
+    "box": [
+      817,
+      436,
+      1077,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 53480
+  },
+  {
+    "id": 0,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 1,
+    "box": [
+      214,
+      14,
+      474,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 49308
+  },
+  {
+    "id": 1,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 2,
+    "box": [
+      516,
+      14,
+      774,
+      422
+    ],
+    "size": [
+      258,
+      408
+    ],
+    "ratio": 0.6323529411764706,
+    "bytes": 50897
+  },
+  {
+    "id": 4,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 3,
+    "box": [
+      816,
+      14,
+      1077,
+      423
+    ],
+    "size": [
+      261,
+      409
+    ],
+    "ratio": 0.6381418092909535,
+    "bytes": 50668
+  },
+  {
+    "id": 5,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 4,
+    "box": [
+      214,
+      436,
+      474,
+      845
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 51559
+  },
+  {
+    "id": 8,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 5,
+    "box": [
+      516,
+      436,
+      774,
+      845
+    ],
+    "size": [
+      258,
+      409
+    ],
+    "ratio": 0.6308068459657702,
+    "bytes": 48605
+  },
+  {
+    "id": 9,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 6,
+    "box": [
+      816,
+      436,
+      1077,
+      845
+    ],
+    "size": [
+      261,
+      409
+    ],
+    "ratio": 0.6381418092909535,
+    "bytes": 47490
+  },
+  {
+    "id": 12,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 1,
+    "box": [
+      214,
+      14,
+      474,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 53646
+  },
+  {
+    "id": 13,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 2,
+    "box": [
+      516,
+      14,
+      775,
+      422
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 48983
+  },
+  {
+    "id": 16,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 3,
+    "box": [
+      816,
+      14,
+      1076,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 54037
+  },
+  {
+    "id": 17,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 4,
+    "box": [
+      214,
+      436,
+      474,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 52930
+  },
+  {
+    "id": 20,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 5,
+    "box": [
+      516,
+      436,
+      775,
+      844
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 50950
+  },
+  {
+    "id": 21,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 6,
+    "box": [
+      817,
+      436,
+      1076,
+      844
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 49206
+  }
+]
