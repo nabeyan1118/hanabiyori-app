@@ -2,13 +2,13 @@
   "pass": true,
   "method": "Node vm with DOM stub; baseline comparison, not browser rendering",
   "allIds": 48,
-  "adoptedIdMonthRankChecks": 25,
-  "kasuSvgByteForByte": 23,
+  "adoptedIdMonthRankChecks": 48,
+  "kasuSvgByteForByte": 0,
   "threeCardDraw": true,
   "resultMatchesBaseline": true,
   "savedDrawReload": true,
   "previousDayReflection": true,
   "soundPreference": true,
   "transitionDeclaration": "0.72s unchanged",
-  "browserRendering": "NOT VERIFIED: Chromium startup blocked by sandbox setsockopt EPERM"
+  "browserRendering": "NOT VERIFIED: this check uses a Node DOM stub"
 }
