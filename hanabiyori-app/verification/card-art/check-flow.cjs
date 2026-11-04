@@ -27,6 +27,8 @@ for(const key of ['#readings','#weatherTitle','#weatherMessage','#actionTitle','
 }
 const saved=boot(html,current.stored);saved.flush();assert.deepEqual(saved.stored.days[today].ids,current.stored.days[today].ids);assert.equal(saved.element('#drawBtn').disabled,true);
 const expected=new Map([[0,[1,'光']],[1,[1,'短冊']],[4,[2,'種']],[5,[2,'短冊']],[8,[3,'光']],[9,[3,'短冊']],[12,[4,'種']],[13,[4,'短冊']],[16,[5,'種']],[17,[5,'短冊']],[20,[6,'種']],[21,[6,'短冊']],[24,[7,'種']],[25,[7,'短冊']],[28,[8,'光']],[29,[8,'種']],[32,[9,'種']],[33,[9,'短冊']],[36,[10,'種']],[37,[10,'短冊']],[40,[11,'光']],[41,[11,'種']],[42,[11,'短冊']],[43,[11,'カス']],[44,[12,'光']]]);
+for(const id of [2,3,6,7,10,11,14,15,18,19,22,23,26,27,30,31,34,35,38,39,45,46,47]) expected.set(id,[Math.floor(id/4)+1,'カス']);
+assert.equal(expected.size,48);
 const cards=vm.runInNewContext(html.match(/const CARDS=([\s\S]*?);/)[1]);
 const map=vm.runInNewContext(html.match(/const CARD_ART=([\s\S]*?);/)[1]);
 assert.equal(Object.keys(map).length,48);
@@ -46,5 +48,5 @@ assert.equal(reflection.element('#reflection').classList.contains('show'),true);
 reflection.element('reflection-button').listeners.click();assert.equal(reflection.stored.days[yesterday].reflection,'yes');assert.equal(reflection.element('#reflection').classList.contains('show'),false);
 reflection.element('#soundBtn').listeners.click();assert.equal(reflection.stored.sound,true);
 assert.ok(html.includes('transition:transform .72s'));
-const result={pass:true,method:'Node vm with DOM stub; baseline comparison, not browser rendering',allIds:48,adoptedIdMonthRankChecks:expected.size,kasuSvgByteForByte:48-expected.size,threeCardDraw:true,resultMatchesBaseline:true,savedDrawReload:true,previousDayReflection:true,soundPreference:true,transitionDeclaration:'0.72s unchanged',browserRendering:'NOT VERIFIED: Chromium startup blocked by sandbox setsockopt EPERM'};
+const result={pass:true,method:'Node vm with DOM stub; baseline comparison, not browser rendering',allIds:48,adoptedIdMonthRankChecks:expected.size,kasuSvgByteForByte:48-expected.size,threeCardDraw:true,resultMatchesBaseline:true,savedDrawReload:true,previousDayReflection:true,soundPreference:true,transitionDeclaration:'0.72s unchanged',browserRendering:'NOT VERIFIED: this check uses a Node DOM stub'};
 fs.writeFileSync(path.join(__dirname,'flow-results.json'),JSON.stringify(result,null,2)+'\n');console.log(result);
