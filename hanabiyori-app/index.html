@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
+      --kinari:#f8e2be;--sumi:#142018;
       --bg:#071008;--bg2:#0c190e;--panel:#101f13;--panel2:#142718;
       --ink:#e7eadc;--muted:#a9b4a2;--green:#82ba80;--deep:#4c7951;
       --gold:#c6aa58;--gold2:#8d7535;--line:rgba(190,209,176,.17);
@@ -40,29 +41,48 @@
     .stage:after{content:"";position:absolute;inset:9px;border:1px solid rgba(198,170,88,.08);border-radius:16px;pointer-events:none}
     .stage-head{text-align:center;position:relative;z-index:1}.kicker{color:var(--green);font-size:.68rem;letter-spacing:.24em}.stage h2{font-family:"Zen Old Mincho";font-weight:400;font-size:1.25rem;letter-spacing:.1em;margin:9px 0 7px}.stage-copy{color:var(--muted);font-size:.76rem;line-height:1.8;margin:0}
     .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(9px,3vw,18px);margin:30px auto 26px;max-width:540px;position:relative;z-index:1}
-    .slot{text-align:center;min-width:0}.slot-label{font-size:clamp(.57rem,2vw,.7rem);letter-spacing:.06em;color:#c3cab9;margin-bottom:9px;white-space:nowrap}.card{width:100%;aspect-ratio:92/124;position:relative;perspective:900px;filter:drop-shadow(0 9px 11px rgba(0,0,0,.3))}.card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .72s cubic-bezier(.22,.74,.18,1)}.card.revealed .card-inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:7px;overflow:hidden}.front{transform:rotateY(180deg);background:#101810}.back{display:grid;place-items:center;background:linear-gradient(145deg,#112818,#07120b);border:2px solid #b39143;box-shadow:inset 0 0 0 4px #0b170d,inset 0 0 0 5px rgba(198,170,88,.5)}.back:before{content:"花";display:grid;place-items:center;width:45%;aspect-ratio:1;border:1px solid rgba(198,170,88,.55);border-radius:50%;font-family:"Zen Old Mincho";font-size:clamp(1rem,5vw,1.65rem);color:#bda251;background:rgba(198,170,88,.04)}
+    .slot{text-align:center;min-width:0}.slot-label{font-size:clamp(.57rem,2vw,.7rem);letter-spacing:.06em;color:#c3cab9;margin-bottom:9px;white-space:nowrap}.card{width:100%;aspect-ratio:92/124;position:relative;perspective:900px;filter:drop-shadow(0 9px 11px rgba(0,0,0,.3))}.card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .72s cubic-bezier(.22,.74,.18,1)}.card.revealed .card-inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:7px;overflow:hidden}.front img{display:block;width:100%;height:100%;object-fit:contain}.front{transform:rotateY(180deg);background:#101810}.back{display:grid;place-items:center;background:linear-gradient(145deg,#112818,#07120b);border:2px solid #b39143;box-shadow:inset 0 0 0 4px #0b170d,inset 0 0 0 5px rgba(198,170,88,.5)}.back:before{content:"花";display:grid;place-items:center;width:45%;aspect-ratio:1;border:1px solid rgba(198,170,88,.55);border-radius:50%;font-family:"Zen Old Mincho";font-size:clamp(1rem,5vw,1.65rem);color:#bda251;background:rgba(198,170,88,.04)}
     .draw-wrap{text-align:center;position:relative;z-index:2}.draw{border:1px solid #c5a955;border-radius:999px;background:linear-gradient(180deg,#b99b44,#8b6e28);color:#081009;padding:14px 30px;min-width:220px;font-weight:700;letter-spacing:.1em;cursor:pointer;box-shadow:0 9px 25px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.28);transition:.25s}.draw:hover{transform:translateY(-2px);filter:brightness(1.08)}.draw:disabled{cursor:default;transform:none;filter:saturate(.65);opacity:.72}.once{display:block;margin-top:11px;color:#71806f;font-size:.65rem}
     .result{display:none;margin-top:24px}.result.show{display:block;animation:rise .65s ease both}.weather{text-align:center;padding:27px 20px 23px;background:radial-gradient(circle at 50% 0%,rgba(198,170,88,.1),transparent 70%);border-bottom:1px solid var(--line)}.weather-label{font-size:.64rem;color:var(--gold);letter-spacing:.25em}.weather h2{font-family:"Zen Old Mincho";font-size:clamp(1.8rem,7vw,2.7rem);font-weight:400;letter-spacing:.12em;margin:9px 0 12px}.weather p{max-width:34rem;margin:auto;color:#c1c9bb;font-size:.85rem;line-height:1.95}
     .readings{display:grid;gap:12px;margin:18px 0}.reading{background:rgba(15,30,18,.82);border:1px solid var(--line);border-radius:16px;padding:18px 19px}.reading-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.reading-index{color:var(--gold);font-family:"Zen Old Mincho"}.reading-role{font-size:.76rem;letter-spacing:.13em}.reading-card{margin-left:auto;color:var(--green);font-size:.69rem}.reading p{margin:0;color:#bcc5b7;line-height:1.9;font-size:.79rem}
     .action-box{position:relative;margin-top:14px;padding:25px 22px 23px;border-radius:18px;background:linear-gradient(135deg,rgba(38,63,39,.8),rgba(17,34,21,.92));border:1px solid rgba(130,186,128,.32)}.action-box small{color:#9cc49a;letter-spacing:.2em}.action-box h3{font-family:"Zen Old Mincho";font-weight:400;font-size:1.22rem;margin:10px 0 8px}.action-box p{margin:0;color:#d1d7ca;line-height:1.9;font-size:.83rem}
     .note{margin:20px auto 0;text-align:center;color:#788575;font-size:.67rem;line-height:1.8}.again{display:block;margin:20px auto 0;border:0;border-bottom:1px solid rgba(198,170,88,.4);background:none;color:#aeb8a9;padding:5px;cursor:pointer;font-size:.7rem}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;background:#e5e8dd;color:#0b140c;border-radius:999px;padding:10px 17px;font-size:.72rem;transition:.3s;z-index:30;pointer-events:none}.toast.show{transform:translate(-50%,0);opacity:1}
     footer{text-align:center;padding-top:38px;color:#60705f;font-size:.63rem;line-height:1.9}.footer-brand{font-family:"Zen Old Mincho";letter-spacing:.18em;color:#859383;margin-bottom:5px}
+
+    /* 改訂版デザイン補記（2026-11-06） */
+    header{margin-bottom:16px;flex-wrap:wrap}
+    .brand{min-width:0}.brand-sub{font-size:11px;margin-top:0}
+    .hero{padding:0 0 22px}.key-visual{display:block;width:100%;height:min(38vh,340px);max-height:55vh;object-fit:cover;object-position:50% 42%;margin-bottom:16px;border-radius:16px}
+    .hero h1{font-size:clamp(1.1rem,4.5vw,1.9rem);letter-spacing:.04em}
+    .eyebrow{margin-bottom:10px}.lead{margin-top:10px;font-size:.8rem;line-height:1.8}.date{margin-top:12px;border-color:var(--month-accent);color:var(--month-accent)}
+    .reading,.reflection{background:var(--kinari);color:var(--sumi);border-color:rgba(20,32,24,.25)}
+    .reading p,.reading-index,.reading-card,.reflection small{color:var(--sumi)}
+    .reflection-actions button{border-color:rgba(20,32,24,.4)}
+    .stage-head:before{content:"";position:absolute;inset:-28px -12px 0;background:url('assets/kin-un.webp') center top / min(100%,460px) 90px no-repeat;opacity:.28;pointer-events:none;z-index:-1}
+    .sound,.again,.reflection-actions button{min-width:44px;min-height:44px}
+    .slot-label{font-size:11px;white-space:normal}.once,footer,.note,.weather-label,.kicker,.eyebrow,.reading-card{font-size:max(11px,.69rem)}
+    .reading-head{min-width:0}.reading-card{overflow-wrap:anywhere}
+    .oni-note{margin-top:10px!important}
     @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
     @media(max-width:480px){.shell{width:min(100% - 22px,760px);padding-top:15px}.hero{padding-top:18px}.stage{padding-inline:12px}.cards{gap:7px}.slot-label{letter-spacing:0}.reading-head{flex-wrap:wrap}.reading-card{width:100%;margin-left:25px}.sound .sound-text{display:none}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card-inner,.draw,.toast{transition:none}.result.show{animation:none}}
   </style>
+  <link rel="stylesheet" href="auth-ui.css">
 </head>
 <body>
   <a class="skip" href="#drawStage">占いへ進む</a>
   <main class="shell">
     <header>
-      <div class="brand"><span class="crest">日</span><span class="brand-name">花札日和<small class="brand-sub">HANAFUDA BIYORI</small></span></div>
+      <div class="brand"><span class="crest">日</span><span class="brand-sub">HANAFUDA BIYORI</span></div>
       <button class="sound" id="soundBtn" type="button" aria-pressed="true"><span aria-hidden="true" id="soundIcon">♪</span> <span class="sound-text" id="soundText">音あり</span></button>
+      <button class="sound" id="accountToggle" type="button" aria-controls="accountPanel" aria-expanded="false">ログイン／マイページ</button>
     </header>
+    <section id="accountPanel" class="account-panel" aria-label="ログイン・マイページ" hidden></section>
 
     <section class="hero" aria-labelledby="heroTitle">
+      <img class="key-visual" src="assets/key-visual.webp" width="1024" height="1536" alt="金雲と四季の花に囲まれた、花札日和の縦看板">
       <p class="eyebrow">一日一回、無料の三枚読み</p>
-      <h1 id="heroTitle"><span>今日は、どんな</span><span>日和だろう。</span></h1>
+      <h1 id="heroTitle">今日は、どんな日和だろう。</h1>
       <p class="lead">巡りを知れば、進む・整える・休むを選びやすくなる。<br>未来を決めるのではなく、今日を選ぶための花札占いです。</p>
       <div class="date" id="todayLabel" aria-label="今日の日付"></div>
     </section>
@@ -128,9 +148,62 @@
       [8,'光','芒に月','葉月','#0a1020','#c8d0f0','金','静けさの中で見渡す'],[8,'種','芒に雁','葉月','#0a1020','#a8b8e0','金','視点を変えて旅立つ'],[8,'カス','芒のカス一','葉月','#0a1020','#7888c0','金','余白から生まれる知恵'],[8,'カス','芒のカス二','葉月','#0a1020','#6878b0','金','自然体に戻る'],
       [9,'種','菊に盃','長月','#1e1804','#f0e898','金','積み重ねを味わう'],[9,'短冊','菊の青短','長月','#1e1804','#98c898','金','まっすぐな言葉'],[9,'カス','菊のカス一','長月','#1e1804','#d0c878','金','日々の誠実さ'],[9,'カス','菊のカス二','長月','#1e1804','#c0b868','金','急がず実る'],
       [10,'種','紅葉に鹿','神無月','#1e0a04','#f0a868','金','気配に耳を澄ます'],[10,'短冊','紅葉の青短','神無月','#1e0a04','#88c088','金','実りを受け取る言葉'],[10,'カス','紅葉のカス一','神無月','#1e0a04','#e09058','金','変化の色を楽しむ'],[10,'カス','紅葉のカス二','神無月','#1e0a04','#d08048','金','落ち着きと成熟'],
-      [11,'光','柳に小野道風','霜月','#041610','#98e0b0','水','繰り返しから掴む気づき'],[11,'種','柳に燕','霜月','#041610','#78c890','水','軽やかに動く'],[11,'短冊','柳の短冊','霜月','#041610','#58b070','水','柔らかく伝える'],[11,'カス','柳のカス','霜月','#041610','#389850','水','雨宿りして整える'],
+      [11,'光','柳に小野道風','霜月','#041610','#98e0b0','水','繰り返しから掴む気づき'],[11,'種','柳に燕','霜月','#041610','#78c890','水','軽やかに動く'],[11,'短冊','柳の短冊','霜月','#041610','#58b070','水','柔らかく伝える'],[11,'カス','柳に雷（鬼札）','霜月','#041610','#389850','水','雨宿りして整える'],
       [12,'光','桐に鳳凰','師走','#100818','#c8b8e8','水','一区切りと新しい始まり'],[12,'カス','桐のカス一','師走','#100818','#a898d0','水','終わらせて備える'],[12,'カス','桐のカス二','師走','#100818','#9888c0','水','静かに切り替える'],[12,'カス','桐のカス三','師走','#100818','#8878b0','水','見えない準備をする']
     ].map((v,i)=>({id:i,month:v[0],rank:v[1],name:v[2],mj:v[3],cl:v[4],ac:v[5],el:v[6],desc:v[7]}));
+
+    // Fixed CARDS id map (month/rank verified against the adopted-art table).
+    // Replace a null with its image path when that kasu card arrives.
+    const CARD_ART=Object.freeze({
+      0: 'assets/cards/card-00.jpg',
+      1: 'assets/cards/card-01.jpg',
+      2: 'assets/cards/card-02.jpg',
+      3: 'assets/cards/card-03.jpg',
+      4: 'assets/cards/card-04.jpg',
+      5: 'assets/cards/card-05.jpg',
+      6: 'assets/cards/card-06.jpg',
+      7: 'assets/cards/card-07.jpg',
+      8: 'assets/cards/card-08.jpg',
+      9: 'assets/cards/card-09.jpg',
+      10: 'assets/cards/card-10.jpg',
+      11: 'assets/cards/card-11.jpg',
+      12: 'assets/cards/card-12.jpg',
+      13: 'assets/cards/card-13.jpg',
+      14: 'assets/cards/card-14.jpg',
+      15: 'assets/cards/card-15.jpg',
+      16: 'assets/cards/card-16.jpg',
+      17: 'assets/cards/card-17.jpg',
+      18: 'assets/cards/card-18.jpg',
+      19: 'assets/cards/card-19.jpg',
+      20: 'assets/cards/card-20.jpg',
+      21: 'assets/cards/card-21.jpg',
+      22: 'assets/cards/card-22.jpg',
+      23: 'assets/cards/card-23.jpg',
+      24: 'assets/cards/card-24.jpg',
+      25: 'assets/cards/card-25.jpg',
+      26: 'assets/cards/card-26.jpg',
+      27: 'assets/cards/card-27.jpg',
+      28: 'assets/cards/card-28.jpg',
+      29: 'assets/cards/card-29.jpg',
+      30: 'assets/cards/card-30.jpg',
+      31: 'assets/cards/card-31.jpg',
+      32: 'assets/cards/card-32.jpg',
+      33: 'assets/cards/card-33.jpg',
+      34: 'assets/cards/card-34.jpg',
+      35: 'assets/cards/card-35.jpg',
+      36: 'assets/cards/card-36.jpg',
+      37: 'assets/cards/card-37.jpg',
+      38: 'assets/cards/card-38.jpg',
+      39: 'assets/cards/card-39.jpg',
+      40: 'assets/cards/card-40.jpg',
+      41: 'assets/cards/card-41.jpg',
+      42: 'assets/cards/card-42.jpg',
+      43: 'assets/cards/card-43.jpg',
+      44: 'assets/cards/card-44.jpg',
+      45: 'assets/cards/card-45.jpg',
+      46: 'assets/cards/card-46.jpg',
+      47: 'assets/cards/card-47.jpg',
+    });
 
     const ROLES=[
       {name:'今日の空模様',lead:'一日の背景には',tails:['という気配があります。無理に逆らわず、まず流れを眺めてみて。','という巡りが流れています。急いで結論を出す必要はありません。','という色合いがあります。今日の判断の背景として覚えておいて。']},
@@ -164,6 +237,10 @@
     function seededDraw(){const r=rng(hash('花札日和:'+state.today));const pool=[...CARDS];for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}return{ids:pool.slice(0,3).map(c=>c.id),variant:Math.floor(r()*3),created:Date.now()}}
     function weather(cards){const high=cards.filter(c=>c.rank==='光'||c.rank==='種').length;const low=cards.filter(c=>c.rank==='カス').length;const months=cards.map(c=>c.month);if(high>=2)return'追い風';if(cards.some(c=>c.month===11)||cards.filter(c=>c.el==='水').length>=2)return'雨宿り';if(Math.max(...months)-Math.min(...months)>=8)return'切替日和';if(low===3)return'仕込み日和';return'凪の日'}
 
+    function cardFront(c){
+      const src=CARD_ART[c.id];
+      return src?`<img src="${src}" alt="${c.name}、${c.mj}、${c.rank}" decoding="async">`:cardSvg(c);
+    }
     function cardSvg(c){
       const motif={1:'M28 79 Q46 28 64 79',2:'M20 84 Q42 45 67 25',3:'M24 72 Q47 28 69 72',4:'M18 24 Q46 44 74 24',5:'M28 82 L30 30 M45 82 L46 24 M62 82 L60 31',6:'M23 52 Q46 22 69 52 Q46 75 23 52',7:'M25 82 Q37 55 29 30 M51 82 Q64 55 56 30',8:'M10 72 Q34 58 53 66 Q68 75 82 59',9:'M46 22 C67 24 69 58 46 71 C23 58 25 24 46 22',10:'M15 82 Q31 52 46 35 Q63 52 77 82',11:'M46 15 Q64 42 46 70 Q28 42 46 15',12:'M21 78 L46 21 L71 78'}[c.month];
       const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
@@ -172,11 +249,13 @@
     function pashi(){if(!state.sound)return;try{const A=window.AudioContext||window.webkitAudioContext;const ctx=pashi.ctx||(pashi.ctx=new A());const b=ctx.createBuffer(1,ctx.sampleRate*.075,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++){const t=i/ctx.sampleRate;d[i]=(Math.random()*2-1)*Math.exp(-t*78)*.55}const s=ctx.createBufferSource(),g=ctx.createGain();g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.075);s.buffer=b;s.connect(g);g.connect(ctx.destination);s.start()}catch(e){}}
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
-    function formatDate(){const d=new Date(),jp=new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'long'}).format(d);$('#todayLabel').textContent=jp+' の巡り'}
+    const ONI_NOTES=['鬼札 ― 今日は雷の気配。思いがけない知らせが、空気を切り替えそうです。', '鬼札 ― 滞って見えるものも、ふいのきっかけで姿を変えていくかもしれません。', '鬼札 ― 予定にない一手を、今日は軽く拾ってみて。その一手が、流れを変えるきっかけになりそうです。'];
+    const MONTH_ACCENTS=['#b0d8a0','#f4a8b8','#f8c8d8','#c8b8f0','#a0d898','#f8b0d0','#e8c078','#c8d0f0','#f0e898','#f0a868','#98e0b0','#c8b8e8'];
+    function formatDate(){const d=new Date(state.today+'T12:00:00');$('#todayLabel').setAttribute('style','--month-accent:'+MONTH_ACCENTS[d.getMonth()]);const jp=new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'long'}).format(d);$('#todayLabel').textContent=jp+' の巡り'}
     function prepare(){
       const stored=data();state.sound=stored.sound!==false;updateSound();
       state.draw=stored.days?.[state.today]||seededDraw();
-      state.draw.ids.map(id=>CARDS[id]).forEach((c,i)=>$('#card'+i+' .front').innerHTML=cardSvg(c));
+      state.draw.ids.map(id=>CARDS[id]).forEach((c,i)=>$('#card'+i+' .front').innerHTML=cardFront(c));
       const yesterday=stored.days?.[previousKey()];if(yesterday&&!yesterday.reflection){const cards=yesterday.ids.map(id=>CARDS[id]);$('#reflectionText').textContent=`昨日の「${makeAction(cards,yesterday.variant).title}」は、どうでしたか？`;$('#reflection').classList.add('show')}
       if(stored.days?.[state.today])render(false);
     }
@@ -186,7 +265,7 @@
       cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');pashi();vibrate()};animate?setTimeout(reveal,180+i*430):reveal()});
       const delay=animate?1550:30;setTimeout(()=>{
         const w=weather(cards);$('#weatherTitle').textContent=w;$('#weatherMessage').textContent=WEATHER[w].msg;
-        $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p></article>`).join('');
+        $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p>${c.id===43?`<p class="oni-note">${ONI_NOTES[i]}</p>`:''}</article>`).join('');
         const a=makeAction(cards,state.draw.variant);$('#actionTitle').textContent=a.title;$('#actionText').textContent=a.text;$('#result').classList.add('show');$('#drawBtn').textContent='本日は占い済み';$('#drawBtn').disabled=true;state.revealing=false;
         const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored);
         if(animate)$('#result').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
@@ -200,5 +279,6 @@
     formatDate();prepare();
   })();
   </script>
+  <script type="module" src="auth-ui.js"></script>
 </body>
 </html>
