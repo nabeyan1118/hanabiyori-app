@@ -1,0 +1,801 @@
+[
+  {
+    "id": 36,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 1,
+    "box": [
+      213,
+      14,
+      474,
+      422
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 48131
+  },
+  {
+    "id": 37,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 2,
+    "box": [
+      515,
+      14,
+      776,
+      422
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 50766
+  },
+  {
+    "id": 40,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 3,
+    "box": [
+      817,
+      14,
+      1077,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 48049
+  },
+  {
+    "id": 41,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 4,
+    "box": [
+      213,
+      436,
+      474,
+      844
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 47765
+  },
+  {
+    "id": 42,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 5,
+    "box": [
+      515,
+      436,
+      776,
+      844
+    ],
+    "size": [
+      261,
+      408
+    ],
+    "ratio": 0.6397058823529411,
+    "bytes": 45855
+  },
+  {
+    "id": 44,
+    "sheet": "cards-sheet1_koyo-yanagi-kiri.jpg",
+    "position": 6,
+    "box": [
+      817,
+      436,
+      1077,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 52621
+  },
+  {
+    "id": 24,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 1,
+    "box": [
+      214,
+      13,
+      474,
+      422
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 55100
+  },
+  {
+    "id": 25,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 2,
+    "box": [
+      516,
+      14,
+      775,
+      422
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 54542
+  },
+  {
+    "id": 28,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 3,
+    "box": [
+      817,
+      14,
+      1077,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 50091
+  },
+  {
+    "id": 29,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 4,
+    "box": [
+      214,
+      436,
+      474,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 51342
+  },
+  {
+    "id": 32,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 5,
+    "box": [
+      516,
+      436,
+      775,
+      844
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 53448
+  },
+  {
+    "id": 33,
+    "sheet": "cards-sheet2_hagi-susuki-kiku.jpg",
+    "position": 6,
+    "box": [
+      817,
+      436,
+      1077,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 53480
+  },
+  {
+    "id": 0,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 1,
+    "box": [
+      214,
+      14,
+      474,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 49308
+  },
+  {
+    "id": 1,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 2,
+    "box": [
+      516,
+      14,
+      774,
+      422
+    ],
+    "size": [
+      258,
+      408
+    ],
+    "ratio": 0.6323529411764706,
+    "bytes": 50897
+  },
+  {
+    "id": 4,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 3,
+    "box": [
+      816,
+      14,
+      1077,
+      423
+    ],
+    "size": [
+      261,
+      409
+    ],
+    "ratio": 0.6381418092909535,
+    "bytes": 50668
+  },
+  {
+    "id": 5,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 4,
+    "box": [
+      214,
+      436,
+      474,
+      845
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 51559
+  },
+  {
+    "id": 8,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 5,
+    "box": [
+      516,
+      436,
+      774,
+      845
+    ],
+    "size": [
+      258,
+      409
+    ],
+    "ratio": 0.6308068459657702,
+    "bytes": 48605
+  },
+  {
+    "id": 9,
+    "sheet": "cards-sheet3_matsu-ume-sakura.jpg",
+    "position": 6,
+    "box": [
+      816,
+      436,
+      1077,
+      845
+    ],
+    "size": [
+      261,
+      409
+    ],
+    "ratio": 0.6381418092909535,
+    "bytes": 47490
+  },
+  {
+    "id": 12,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 1,
+    "box": [
+      214,
+      14,
+      474,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 53646
+  },
+  {
+    "id": 13,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 2,
+    "box": [
+      516,
+      14,
+      775,
+      422
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 48983
+  },
+  {
+    "id": 16,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 3,
+    "box": [
+      816,
+      14,
+      1076,
+      422
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 54037
+  },
+  {
+    "id": 17,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 4,
+    "box": [
+      214,
+      436,
+      474,
+      844
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 52930
+  },
+  {
+    "id": 20,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 5,
+    "box": [
+      516,
+      436,
+      775,
+      844
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 50950
+  },
+  {
+    "id": 21,
+    "sheet": "cards-sheet4_fuji-ayame-botan.jpg",
+    "position": 6,
+    "box": [
+      817,
+      436,
+      1076,
+      844
+    ],
+    "size": [
+      259,
+      408
+    ],
+    "ratio": 0.6348039215686274,
+    "bytes": 49206
+  },
+  {
+    "id": 2,
+    "sheet": "kasu-A.png",
+    "position": 1,
+    "box": [
+      256,
+      17,
+      564,
+      502
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 62486
+  },
+  {
+    "id": 3,
+    "sheet": "kasu-A.png",
+    "position": 2,
+    "box": [
+      614,
+      17,
+      921,
+      503
+    ],
+    "size": [
+      260,
+      412
+    ],
+    "ratio": 0.6310679611650486,
+    "bytes": 63909
+  },
+  {
+    "id": 6,
+    "sheet": "kasu-A.png",
+    "position": 3,
+    "box": [
+      972,
+      17,
+      1282,
+      503
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 53086
+  },
+  {
+    "id": 7,
+    "sheet": "kasu-A.png",
+    "position": 4,
+    "box": [
+      256,
+      520,
+      564,
+      1005
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 54066
+  },
+  {
+    "id": 10,
+    "sheet": "kasu-A.png",
+    "position": 5,
+    "box": [
+      614,
+      519,
+      921,
+      1005
+    ],
+    "size": [
+      260,
+      412
+    ],
+    "ratio": 0.6310679611650486,
+    "bytes": 52758
+  },
+  {
+    "id": 11,
+    "sheet": "kasu-A.png",
+    "position": 6,
+    "box": [
+      972,
+      520,
+      1282,
+      1006
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 52224
+  },
+  {
+    "id": 14,
+    "sheet": "kasu-B.png",
+    "position": 1,
+    "box": [
+      255,
+      16,
+      563,
+      502
+    ],
+    "size": [
+      260,
+      410
+    ],
+    "ratio": 0.6341463414634146,
+    "bytes": 57187
+  },
+  {
+    "id": 15,
+    "sheet": "kasu-B.png",
+    "position": 2,
+    "box": [
+      613,
+      16,
+      922,
+      502
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 55658
+  },
+  {
+    "id": 18,
+    "sheet": "kasu-B.png",
+    "position": 3,
+    "box": [
+      972,
+      16,
+      1284,
+      502
+    ],
+    "size": [
+      260,
+      405
+    ],
+    "ratio": 0.6419753086419753,
+    "bytes": 59882
+  },
+  {
+    "id": 19,
+    "sheet": "kasu-B.png",
+    "position": 4,
+    "box": [
+      255,
+      519,
+      564,
+      1005
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 60156
+  },
+  {
+    "id": 22,
+    "sheet": "kasu-B.png",
+    "position": 5,
+    "box": [
+      613,
+      519,
+      922,
+      1005
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 56506
+  },
+  {
+    "id": 23,
+    "sheet": "kasu-B.png",
+    "position": 6,
+    "box": [
+      972,
+      519,
+      1284,
+      1005
+    ],
+    "size": [
+      260,
+      405
+    ],
+    "ratio": 0.6419753086419753,
+    "bytes": 58050
+  },
+  {
+    "id": 30,
+    "sheet": "kasu-C.png",
+    "position": 3,
+    "box": [
+      973,
+      16,
+      1281,
+      503
+    ],
+    "size": [
+      260,
+      411
+    ],
+    "ratio": 0.6326034063260341,
+    "bytes": 54907
+  },
+  {
+    "id": 31,
+    "sheet": "kasu-C.png",
+    "position": 4,
+    "box": [
+      254,
+      519,
+      563,
+      1005
+    ],
+    "size": [
+      260,
+      409
+    ],
+    "ratio": 0.6356968215158925,
+    "bytes": 54696
+  },
+  {
+    "id": 34,
+    "sheet": "kasu-C.png",
+    "position": 5,
+    "box": [
+      613,
+      519,
+      923,
+      1005
+    ],
+    "size": [
+      260,
+      408
+    ],
+    "ratio": 0.6372549019607843,
+    "bytes": 60502
+  },
+  {
+    "id": 35,
+    "sheet": "kasu-C.png",
+    "position": 6,
+    "box": [
+      973,
+      519,
+      1281,
+      1005
+    ],
+    "size": [
+      260,
+      410
+    ],
+    "ratio": 0.6341463414634146,
+    "bytes": 61625
+  },
+  {
+    "id": 38,
+    "sheet": "kasu-fix-38.png",
+    "position": 1,
+    "box": [
+      14,
+      7,
+      990,
+      1558
+    ],
+    "size": [
+      260,
+      413
+    ],
+    "ratio": 0.6295399515738499,
+    "bytes": 50347
+  },
+  {
+    "id": 39,
+    "sheet": "kasu-D.png",
+    "position": 2,
+    "box": [
+      609,
+      14,
+      928,
+      503
+    ],
+    "size": [
+      260,
+      399
+    ],
+    "ratio": 0.6516290726817042,
+    "bytes": 51740
+  },
+  {
+    "id": 26,
+    "sheet": "kasu-fix-26.png",
+    "position": 1,
+    "box": [
+      39,
+      31,
+      986,
+      1498
+    ],
+    "size": [
+      260,
+      403
+    ],
+    "ratio": 0.6451612903225806,
+    "bytes": 58236
+  },
+  {
+    "id": 27,
+    "sheet": "kasu-fix-27.png",
+    "position": 1,
+    "box": [
+      40,
+      32,
+      984,
+      1497
+    ],
+    "size": [
+      260,
+      403
+    ],
+    "ratio": 0.6451612903225806,
+    "bytes": 57478
+  },
+  {
+    "id": 45,
+    "sheet": "kasu-fix-45.png",
+    "position": 1,
+    "box": [
+      41,
+      31,
+      984,
+      1496
+    ],
+    "size": [
+      260,
+      404
+    ],
+    "ratio": 0.6435643564356436,
+    "bytes": 56150
+  },
+  {
+    "id": 46,
+    "sheet": "kasu-fix-46.png",
+    "position": 1,
+    "box": [
+      41,
+      31,
+      982,
+      1496
+    ],
+    "size": [
+      260,
+      405
+    ],
+    "ratio": 0.6419753086419753,
+    "bytes": 57796
+  },
+  {
+    "id": 47,
+    "sheet": "kasu-fix-47.png",
+    "position": 1,
+    "box": [
+      39,
+      31,
+      985,
+      1497
+    ],
+    "size": [
+      260,
+      403
+    ],
+    "ratio": 0.6451612903225806,
+    "bytes": 60137
+  }
+]
