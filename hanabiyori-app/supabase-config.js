@@ -1,0 +1,3 @@
+// Public client configuration. Authorization is enforced by Supabase RLS.
+export const SUPABASE_URL = "https://lbokynfmrdipdjekzibj.supabase.co";
+export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxib2t5bmZtcmRpcGRqZWt6aWJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxODkyMTAsImV4cCI6MjEwODc2NTIxMH0.Gyxvbt1pZCnW_1j7EAVGUPGPON29ivjhXkh1cul8BOU";
