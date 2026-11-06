@@ -62,7 +62,7 @@ async function showSession(next) {
   login.hidden = !!session;
   memberArea.hidden = true;
   toggle.textContent = session ? 'マイページ' : 'ログイン／マイページ';
-  if (!session) { say('メールのリンクから、ゆっくりログインできます。'); return; }
+  if (!session) { say('メールアドレスに、ログイン用のリンクをお送りします。パスワードは不要です。'); return; }
   say('プロフィールを読み込んでいます。');
   const { data, error } = await client.from('profiles_meishiki')
     .select('birth_date,birth_time,birth_time_unknown,save_consent')
