@@ -134,7 +134,7 @@ const MONTHS = [
       { suffix: "hikari", motif: "柳に小野道風", type: "光" },
       { suffix: "tane", motif: "柳に燕", type: "種" },
       { suffix: "tanzaku", motif: "柳の短冊", type: "短冊", tanColor: "無地" },
-      { suffix: "kasu-1", motif: "柳のカス", type: "カス" },
+      { suffix: "kasu-1", motif: "柳に雷", type: "カス" },
     ],
   },
   {
