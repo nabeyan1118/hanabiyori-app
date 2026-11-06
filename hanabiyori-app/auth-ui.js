@@ -12,6 +12,7 @@ panel.innerHTML = `
   <p id="accountStatus" role="status" aria-live="polite">ログインの準備をしています。</p>
   <form id="loginForm" hidden>
     <label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
+    <p class="auth-note">リンクのメールは、認証サービス「Supabase Auth」の名前で届きます。迷惑メールフォルダに振り分けられることがあるので、届かないときはそちらも確認してください。</p>
     <button type="submit">ログイン用リンクを送る</button>
   </form>
   <div id="memberArea" hidden>
@@ -99,7 +100,7 @@ login.addEventListener('submit', (event) => {
       const { error } = await client.auth.signInWithOtp({ email: login.elements.email.value.trim(),
         options: { emailRedirectTo: redirect.href } });
       if (error) throw error;
-      say('メールを確認してください。届いたリンクからログインできます。お好きなタイミングでお進みください。');
+      say('メールを確認してください。「Supabase Auth」から届いたリンクでログインできます。');
     } finally { button.disabled = false; }
   });
 });
