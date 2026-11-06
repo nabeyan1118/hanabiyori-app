@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
+      --kinari:#f8e2be;--sumi:#142018;
       --bg:#071008;--bg2:#0c190e;--panel:#101f13;--panel2:#142718;
       --ink:#e7eadc;--muted:#a9b4a2;--green:#82ba80;--deep:#4c7951;
       --gold:#c6aa58;--gold2:#8d7535;--line:rgba(190,209,176,.17);
@@ -47,6 +48,21 @@
     .action-box{position:relative;margin-top:14px;padding:25px 22px 23px;border-radius:18px;background:linear-gradient(135deg,rgba(38,63,39,.8),rgba(17,34,21,.92));border:1px solid rgba(130,186,128,.32)}.action-box small{color:#9cc49a;letter-spacing:.2em}.action-box h3{font-family:"Zen Old Mincho";font-weight:400;font-size:1.22rem;margin:10px 0 8px}.action-box p{margin:0;color:#d1d7ca;line-height:1.9;font-size:.83rem}
     .note{margin:20px auto 0;text-align:center;color:#788575;font-size:.67rem;line-height:1.8}.again{display:block;margin:20px auto 0;border:0;border-bottom:1px solid rgba(198,170,88,.4);background:none;color:#aeb8a9;padding:5px;cursor:pointer;font-size:.7rem}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;background:#e5e8dd;color:#0b140c;border-radius:999px;padding:10px 17px;font-size:.72rem;transition:.3s;z-index:30;pointer-events:none}.toast.show{transform:translate(-50%,0);opacity:1}
     footer{text-align:center;padding-top:38px;color:#60705f;font-size:.63rem;line-height:1.9}.footer-brand{font-family:"Zen Old Mincho";letter-spacing:.18em;color:#859383;margin-bottom:5px}
+
+    /* 改訂版デザイン補記（2026-11-06） */
+    header{margin-bottom:16px;flex-wrap:wrap}
+    .brand{min-width:0}.brand-sub{font-size:11px;margin-top:0}
+    .hero{padding:0 0 22px}.key-visual{display:block;width:100%;height:min(38vh,340px);max-height:55vh;object-fit:cover;object-position:top;margin-bottom:16px;border-radius:16px}
+    .hero h1{font-size:clamp(1.1rem,4.5vw,1.9rem);letter-spacing:.04em}
+    .eyebrow{margin-bottom:10px}.lead{margin-top:10px;font-size:.8rem;line-height:1.8}.date{margin-top:12px;border-color:var(--month-accent);color:var(--month-accent)}
+    .reading,.reflection{background:var(--kinari);color:var(--sumi);border-color:rgba(20,32,24,.25)}
+    .reading p,.reading-index,.reading-card,.reflection small{color:var(--sumi)}
+    .reflection-actions button{border-color:rgba(20,32,24,.4)}
+    .stage-head:before{content:"";position:absolute;inset:-28px -12px 0;background:url('assets/kin-un.webp') center top / min(100%,460px) 90px no-repeat;opacity:.28;pointer-events:none;z-index:-1}
+    .sound,.again,.reflection-actions button{min-width:44px;min-height:44px}
+    .slot-label{font-size:11px;white-space:normal}.once,footer,.note,.weather-label,.kicker,.eyebrow,.reading-card{font-size:max(11px,.69rem)}
+    .reading-head{min-width:0}.reading-card{overflow-wrap:anywhere}
+    .oni-note{margin-top:10px!important}
     @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
     @media(max-width:480px){.shell{width:min(100% - 22px,760px);padding-top:15px}.hero{padding-top:18px}.stage{padding-inline:12px}.cards{gap:7px}.slot-label{letter-spacing:0}.reading-head{flex-wrap:wrap}.reading-card{width:100%;margin-left:25px}.sound .sound-text{display:none}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card-inner,.draw,.toast{transition:none}.result.show{animation:none}}
@@ -57,15 +73,16 @@
   <a class="skip" href="#drawStage">占いへ進む</a>
   <main class="shell">
     <header>
-      <div class="brand"><span class="crest">日</span><span class="brand-name">花札日和<small class="brand-sub">HANAFUDA BIYORI</small></span></div>
+      <div class="brand"><span class="crest">日</span><span class="brand-sub">HANAFUDA BIYORI</span></div>
       <button class="sound" id="soundBtn" type="button" aria-pressed="true"><span aria-hidden="true" id="soundIcon">♪</span> <span class="sound-text" id="soundText">音あり</span></button>
       <button class="sound" id="accountToggle" type="button" aria-controls="accountPanel" aria-expanded="false">ログイン／マイページ</button>
     </header>
     <section id="accountPanel" class="account-panel" aria-label="ログイン・マイページ" hidden></section>
 
     <section class="hero" aria-labelledby="heroTitle">
+      <img class="key-visual" src="assets/key-visual.webp" width="1024" height="1536" alt="金雲と四季の花に囲まれた、花札日和の縦看板">
       <p class="eyebrow">一日一回、無料の三枚読み</p>
-      <h1 id="heroTitle"><span>今日は、どんな</span><span>日和だろう。</span></h1>
+      <h1 id="heroTitle">今日は、どんな日和だろう。</h1>
       <p class="lead">巡りを知れば、進む・整える・休むを選びやすくなる。<br>未来を決めるのではなく、今日を選ぶための花札占いです。</p>
       <div class="date" id="todayLabel" aria-label="今日の日付"></div>
     </section>
@@ -131,7 +148,7 @@
       [8,'光','芒に月','葉月','#0a1020','#c8d0f0','金','静けさの中で見渡す'],[8,'種','芒に雁','葉月','#0a1020','#a8b8e0','金','視点を変えて旅立つ'],[8,'カス','芒のカス一','葉月','#0a1020','#7888c0','金','余白から生まれる知恵'],[8,'カス','芒のカス二','葉月','#0a1020','#6878b0','金','自然体に戻る'],
       [9,'種','菊に盃','長月','#1e1804','#f0e898','金','積み重ねを味わう'],[9,'短冊','菊の青短','長月','#1e1804','#98c898','金','まっすぐな言葉'],[9,'カス','菊のカス一','長月','#1e1804','#d0c878','金','日々の誠実さ'],[9,'カス','菊のカス二','長月','#1e1804','#c0b868','金','急がず実る'],
       [10,'種','紅葉に鹿','神無月','#1e0a04','#f0a868','金','気配に耳を澄ます'],[10,'短冊','紅葉の青短','神無月','#1e0a04','#88c088','金','実りを受け取る言葉'],[10,'カス','紅葉のカス一','神無月','#1e0a04','#e09058','金','変化の色を楽しむ'],[10,'カス','紅葉のカス二','神無月','#1e0a04','#d08048','金','落ち着きと成熟'],
-      [11,'光','柳に小野道風','霜月','#041610','#98e0b0','水','繰り返しから掴む気づき'],[11,'種','柳に燕','霜月','#041610','#78c890','水','軽やかに動く'],[11,'短冊','柳の短冊','霜月','#041610','#58b070','水','柔らかく伝える'],[11,'カス','柳のカス','霜月','#041610','#389850','水','雨宿りして整える'],
+      [11,'光','柳に小野道風','霜月','#041610','#98e0b0','水','繰り返しから掴む気づき'],[11,'種','柳に燕','霜月','#041610','#78c890','水','軽やかに動く'],[11,'短冊','柳の短冊','霜月','#041610','#58b070','水','柔らかく伝える'],[11,'カス','柳に雷（鬼札）','霜月','#041610','#389850','水','雨宿りして整える'],
       [12,'光','桐に鳳凰','師走','#100818','#c8b8e8','水','一区切りと新しい始まり'],[12,'カス','桐のカス一','師走','#100818','#a898d0','水','終わらせて備える'],[12,'カス','桐のカス二','師走','#100818','#9888c0','水','静かに切り替える'],[12,'カス','桐のカス三','師走','#100818','#8878b0','水','見えない準備をする']
     ].map((v,i)=>({id:i,month:v[0],rank:v[1],name:v[2],mj:v[3],cl:v[4],ac:v[5],el:v[6],desc:v[7]}));
 
@@ -232,7 +249,9 @@
     function pashi(){if(!state.sound)return;try{const A=window.AudioContext||window.webkitAudioContext;const ctx=pashi.ctx||(pashi.ctx=new A());const b=ctx.createBuffer(1,ctx.sampleRate*.075,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++){const t=i/ctx.sampleRate;d[i]=(Math.random()*2-1)*Math.exp(-t*78)*.55}const s=ctx.createBufferSource(),g=ctx.createGain();g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.075);s.buffer=b;s.connect(g);g.connect(ctx.destination);s.start()}catch(e){}}
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
-    function formatDate(){const d=new Date(),jp=new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'long'}).format(d);$('#todayLabel').textContent=jp+' の巡り'}
+    const ONI_NOTES=['鬼札 ― 今日は雷の気配。思いがけない知らせが、空気を切り替えそうです。', '鬼札 ― 滞って見えるものも、ふいのきっかけで姿を変えていくかもしれません。', '鬼札 ― 予定にない一手を、今日は軽く拾ってみて。その一手が、流れを変えるきっかけになりそうです。'];
+    const MONTH_ACCENTS=['#b0d8a0','#f4a8b8','#f8c8d8','#c8b8f0','#a0d898','#f8b0d0','#e8c078','#c8d0f0','#f0e898','#f0a868','#98e0b0','#c8b8e8'];
+    function formatDate(){const d=new Date(state.today+'T12:00:00');$('#todayLabel').setAttribute('style','--month-accent:'+MONTH_ACCENTS[d.getMonth()]);const jp=new Intl.DateTimeFormat('ja-JP',{month:'long',day:'numeric',weekday:'long'}).format(d);$('#todayLabel').textContent=jp+' の巡り'}
     function prepare(){
       const stored=data();state.sound=stored.sound!==false;updateSound();
       state.draw=stored.days?.[state.today]||seededDraw();
@@ -246,7 +265,7 @@
       cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');pashi();vibrate()};animate?setTimeout(reveal,180+i*430):reveal()});
       const delay=animate?1550:30;setTimeout(()=>{
         const w=weather(cards);$('#weatherTitle').textContent=w;$('#weatherMessage').textContent=WEATHER[w].msg;
-        $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p></article>`).join('');
+        $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p>${c.id===43?`<p class="oni-note">${ONI_NOTES[i]}</p>`:''}</article>`).join('');
         const a=makeAction(cards,state.draw.variant);$('#actionTitle').textContent=a.title;$('#actionText').textContent=a.text;$('#result').classList.add('show');$('#drawBtn').textContent='本日は占い済み';$('#drawBtn').disabled=true;state.revealing=false;
         const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored);
         if(animate)$('#result').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
