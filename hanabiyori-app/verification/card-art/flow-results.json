@@ -1,5 +1,6 @@
 {
   "pass": true,
+  "oniExpectations": "Independent verbatim notes; exact article, position, paragraph count and display name; only specified display name/note normalized",
   "method": "Node vm with DOM stub; baseline comparison, not browser rendering",
   "allIds": 48,
   "adoptedIdMonthRankChecks": 48,
