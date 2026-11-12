@@ -34,6 +34,7 @@
     .brand{display:flex;align-items:center;gap:12px}.crest{width:34px;height:34px;border:1px solid rgba(198,170,88,.65);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-family:"Zen Old Mincho";box-shadow:inset 0 0 0 4px rgba(198,170,88,.04)}
     .brand-name{font-family:"Zen Old Mincho";letter-spacing:.22em;font-size:1rem}.brand-sub{display:block;margin-top:3px;color:var(--muted);font-size:.58rem;letter-spacing:.15em}
     .sound{border:1px solid var(--line);background:rgba(12,25,14,.64);border-radius:999px;padding:9px 12px;font-size:.75rem;color:var(--muted);cursor:pointer}
+    #accountToggle{font-size:13px;line-height:1.4;min-height:44px;padding:9px 10px;background:var(--kinari);color:var(--sumi);border:1px solid var(--gold);white-space:nowrap}
     .hero{text-align:center;padding:22px 4px 42px}.eyebrow{color:var(--gold);font-size:.68rem;letter-spacing:.28em;margin:0 0 15px}.hero h1{font-family:"Zen Old Mincho";font-weight:400;font-size:clamp(2rem,8vw,3.55rem);line-height:1.35;letter-spacing:.08em;margin:0}.hero h1 span{display:block}.lead{max-width:31rem;margin:20px auto 0;color:var(--muted);line-height:2;font-size:.9rem}.date{display:inline-flex;align-items:center;gap:9px;margin-top:22px;padding:8px 14px;border-block:1px solid rgba(198,170,88,.24);font-size:.72rem;color:#c8cfbd;letter-spacing:.11em}
     .reflection{display:none;background:linear-gradient(135deg,rgba(18,36,21,.9),rgba(10,22,12,.9));border:1px solid var(--line);border-radius:18px;padding:19px 20px;margin:0 auto 22px;box-shadow:var(--shadow)}
     .reflection.show{display:block}.reflection small{color:var(--gold);letter-spacing:.16em}.reflection p{margin:8px 0 13px;line-height:1.75}.reflection-actions{display:flex;gap:8px;flex-wrap:wrap}.reflection-actions button{background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:.72rem;cursor:pointer}.reflection-actions button:hover{border-color:var(--green)}
@@ -276,12 +277,33 @@
       const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
       return `<svg viewBox="0 0 92 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}、${c.rank}"><rect width="92" height="124" fill="${c.cl}" rx="5"/><rect x="3" y="3" width="86" height="118" rx="3" fill="none" stroke="${c.ac}" stroke-width="${c.rank==='光'?1.4:.7}" opacity=".62"/>${center}<path d="${motif}" stroke="${c.ac}" stroke-width="1.45" fill="none" opacity=".42"/><rect x="3" y="85" width="86" height="36" fill="${c.ac}" opacity=".11"/><line x1="3" y1="85" x2="89" y2="85" stroke="${c.ac}" opacity=".35"/><text x="46" y="100" text-anchor="middle" font-size="6.4" fill="${c.ac}" font-family="serif" font-weight="bold">${c.name}</text><text x="46" y="115" text-anchor="middle" font-size="5.1" fill="${c.ac}" opacity=".7" font-family="serif">${c.mj}　${c.rank}</text></svg>`
     }
+    function audioCtx(){
+      try{
+        const A=window.AudioContext||window.webkitAudioContext;
+        return pashi.ctx||(A?(pashi.ctx=new A()):null);
+      }catch(e){return null}
+    }
+    function unlockAudio(){
+      const ctx=audioCtx();
+      if(!ctx)return null;
+      try{
+        if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(()=>{});
+      }catch(e){}
+      try{
+        const source=ctx.createBufferSource();
+        source.buffer=ctx.createBuffer(1,1,ctx.sampleRate);
+        source.connect(ctx.destination);source.start();
+      }catch(e){}
+      return ctx;
+    }
     function pashi(){
       if(!state.sound)return;
       try{
-        const A=window.AudioContext||window.webkitAudioContext;
-        const ctx=pashi.ctx||(pashi.ctx=new A());
-        if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+        const ctx=audioCtx();
+        if(!ctx)return;
+        try{
+          if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(()=>{});
+        }catch(e){}
         const now=ctx.currentTime;
         const scrapeDuration=0.14;
         const scrape=ctx.createBuffer(1,Math.round(ctx.sampleRate*scrapeDuration),ctx.sampleRate),scrapeData=scrape.getChannelData(0);
@@ -306,114 +328,136 @@
     }
     // BGM shares pashi.ctx; only explicit user gestures call startBgm().
     let bgm=null;
-    function stopBgm(){
-      const session=bgm;bgm=null;
-      if(!session)return;
-      for(const timer of session.timers)try{clearTimeout(timer)}catch(e){}
-      for(const node of session.nodes){
+    function stopBgmGroup(group){
+      group.active=false;
+      for(const timer of group.timers)try{clearTimeout(timer)}catch(e){}
+      for(const node of group.nodes){
         try{if(node.stop)node.stop()}catch(e){}
         try{node.disconnect()}catch(e){}
       }
-      session.timers.clear();session.nodes.clear();
+      group.timers.clear();group.nodes.clear();
+    }
+    function stopBgm(){
+      const session=bgm;bgm=null;
+      if(!session)return;
+      for(const group of session.groups)stopBgmGroup(group);
+      try{session.master.disconnect()}catch(e){}
     }
     function startBgm(){
       if(!state.sound||bgm)return;
       try{
-        const A=window.AudioContext||window.webkitAudioContext;
-        if(!A)return;
-        const ctx=pashi.ctx||(pashi.ctx=new A());
-        if(ctx.state==='closed')return;
-        const session={timers:new Set(),nodes:new Set()};bgm=session;
-        if(ctx.state==='suspended')ctx.resume().catch(()=>{if(bgm===session)stopBgm()});
-        const own=node=>{session.nodes.add(node);return node};
-        const master=own(ctx.createGain());master.gain.value=0.12;master.connect(ctx.destination);
+        const ctx=unlockAudio();
+        if(!ctx||ctx.state==='closed')return;
+        if(!state.sound||bgm)return;
+        const master=ctx.createGain();master.gain.value=0.12;master.connect(ctx.destination);
+        const session={groups:[],master};bgm=session;
         const random=(min,max)=>min+Math.random()*(max-min);
-        const later=(fn,seconds)=>{
-          const timer=setTimeout(()=>{
-            session.timers.delete(timer);
-            if(bgm!==session||!state.sound)return;
-            try{fn()}catch(e){stopBgm()}
-          },seconds*1000);
-          session.timers.add(timer);
+        const runGroup=initialize=>{
+          const group={active:true,timers:new Set(),nodes:new Set()};session.groups.push(group);
+          const own=node=>{group.nodes.add(node);return node};
+          const later=(fn,seconds)=>{
+            const timer=setTimeout(()=>{
+              group.timers.delete(timer);
+              if(!group.active||bgm!==session||!state.sound)return;
+              try{fn()}catch(e){stopBgmGroup(group)}
+            },seconds*1000);
+            group.timers.add(timer);
+          };
+          const finish=(source,nodes,end)=>{
+            source.onended=()=>{for(const node of nodes)try{node.disconnect();group.nodes.delete(node)}catch(e){}};
+            source.start();source.stop(end);
+          };
+          try{initialize(own,later,finish)}catch(e){stopBgmGroup(group)}
         };
-        const finish=(source,nodes,end)=>{
-          source.onended=()=>{for(const node of nodes)try{node.disconnect();session.nodes.delete(node)}catch(e){}};
-          source.start();source.stop(end);
-        };
-        const scale=[293.66,311.13,392.00,440.00,466.16,587.33,622.25,783.99,880.00,932.33];
-        const pluck=frequency=>{
-          const length=Math.round(ctx.sampleRate*3.5),period=ctx.sampleRate/frequency-0.5;
-          const delay=new Float32Array(Math.ceil(period)),buffer=ctx.createBuffer(1,length,ctx.sampleRate);
-          for(let i=0;i<delay.length;i++)delay[i]=random(-1,1);
-          const samples=buffer.getChannelData(0),whole=Math.floor(period),fraction=period-whole;
-          // Fractional delay plus the averaging filter's half-sample delay preserves tuning.
-          for(let i=0;i<length;i++){
-            const a=i-whole,b=a-1;
-            const x=a<0?delay[(a+delay.length)%delay.length]:samples[a];
-            const y=b<0?delay[(b+delay.length)%delay.length]:samples[b];
-            const c=b-1,z=c<0?delay[(c+delay.length)%delay.length]:samples[c];
-            samples[i]=0.996*((1-fraction)*(x+y)+fraction*(y+z))*0.5;
+        runGroup((own,later,finish)=>{
+          const scale=[293.66,311.13,392.00,440.00,466.16,587.33,622.25,783.99,880.00,932.33];
+          const pluck=frequency=>{
+            let buffer;
+            try{
+              const length=Math.round(ctx.sampleRate*3.5),period=ctx.sampleRate/frequency-0.5;
+              const delay=new Float32Array(Math.ceil(period));
+              buffer=ctx.createBuffer(1,length,ctx.sampleRate);
+              for(let i=0;i<delay.length;i++)delay[i]=random(-1,1);
+              const samples=buffer.getChannelData(0),whole=Math.floor(period),fraction=period-whole;
+              // Fractional delay plus the averaging filter's half-sample delay preserves tuning.
+              for(let i=0;i<length;i++){
+                const a=i-whole,b=a-1;
+                const x=a<0?delay[(a+delay.length)%delay.length]:samples[a];
+                const y=b<0?delay[(b+delay.length)%delay.length]:samples[b];
+                const c=b-1,z=c<0?delay[(c+delay.length)%delay.length]:samples[c];
+                samples[i]=0.996*((1-fraction)*(x+y)+fraction*(y+z))*0.5;
+              }
+            }catch(e){buffer=null}
+            const source=own(buffer?ctx.createBufferSource():ctx.createOscillator()),gain=own(ctx.createGain()),now=ctx.currentTime;
+            if(buffer)source.buffer=buffer;else{source.type='sine';source.frequency.value=frequency}
+            gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.38,now+0.004);
+            gain.gain.exponentialRampToValueAtTime(0.0001,now+3.5);
+            source.connect(gain);gain.connect(master);finish(source,[source,gain],now+3.5);
+          };
+          let index=4;
+          const melody=()=>{
+            const r=Math.random(),step=r<0.4?-1:r<0.8?1:r<0.875?-2:r<0.95?2:0;
+            index=Math.max(0,Math.min(scale.length-1,index+step));
+            const frequency=scale[index];pluck(frequency);
+            if(Math.random()<0.15)later(()=>pluck(frequency),0.2);
+            later(melody,random(1.1,2.3));
+          };
+          melody();
+        });
+        runGroup((own,later,finish)=>{
+          const drone=own(ctx.createGain());drone.gain.value=0.16;drone.connect(master);
+          const breath=own(ctx.createOscillator()),breathDepth=own(ctx.createGain());
+          breath.frequency.value=1/11;breathDepth.gain.value=0.06;
+          breath.connect(breathDepth);breathDepth.connect(drone.gain);breath.start();
+          for(const [frequency,level] of [[264,0.28],[396,0.065],[528,0.045],[220,0.055]]){
+            const source=own(ctx.createOscillator()),gain=own(ctx.createGain());
+            source.type='sine';source.frequency.value=frequency;gain.gain.value=level;
+            source.connect(gain);gain.connect(drone);source.start();
           }
-          const source=own(ctx.createBufferSource()),gain=own(ctx.createGain()),now=ctx.currentTime;
-          source.buffer=buffer;gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.38,now+0.004);
-          gain.gain.exponentialRampToValueAtTime(0.0001,now+3.5);
-          source.connect(gain);gain.connect(master);finish(source,[source,gain],now+3.5);
-        };
-        let index=4;
-        const melody=()=>{
-          const r=Math.random(),step=r<0.4?-1:r<0.8?1:r<0.875?-2:r<0.95?2:0;
-          index=Math.max(0,Math.min(scale.length-1,index+step));
-          const frequency=scale[index];pluck(frequency);
-          if(Math.random()<0.15)later(()=>pluck(frequency),0.2);
-          later(melody,random(1.1,2.3));
-        };
-        const drone=own(ctx.createGain());drone.gain.value=0.16;drone.connect(master);
-        const breath=own(ctx.createOscillator()),breathDepth=own(ctx.createGain());
-        breath.frequency.value=1/11;breathDepth.gain.value=0.06;
-        breath.connect(breathDepth);breathDepth.connect(drone.gain);breath.start();
-        for(const [frequency,level] of [[264,0.28],[396,0.065],[528,0.045],[220,0.055]]){
-          const source=own(ctx.createOscillator()),gain=own(ctx.createGain());
-          source.type='sine';source.frequency.value=frequency;gain.gain.value=level;
-          source.connect(gain);gain.connect(drone);source.start();
-        }
-        const flute=frequency=>{
-          const now=ctx.currentTime,duration=3.2;
-          const source=own(ctx.createOscillator()),envelope=own(ctx.createGain());
-          const vibrato=own(ctx.createOscillator()),depth=own(ctx.createGain());
-          source.type='sine';source.frequency.value=frequency;vibrato.frequency.value=5.5;
-          depth.gain.setValueAtTime(0,now);depth.gain.setValueAtTime(0,now+duration/2);
-          depth.gain.linearRampToValueAtTime(2.5,now+duration-0.4);
-          vibrato.connect(depth);depth.connect(source.frequency);
-          envelope.gain.setValueAtTime(0,now);envelope.gain.linearRampToValueAtTime(0.13,now+0.8);
-          envelope.gain.setValueAtTime(0.13,now+duration-1);envelope.gain.linearRampToValueAtTime(0,now+duration);
-          source.connect(envelope);envelope.connect(master);
-          const noise=own(ctx.createBufferSource()),filter=own(ctx.createBiquadFilter()),air=own(ctx.createGain());
-          const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*duration),ctx.sampleRate),samples=buffer.getChannelData(0);
-          for(let i=0;i<samples.length;i++)samples[i]=random(-1,1);
-          noise.buffer=buffer;filter.type='bandpass';filter.frequency.value=1800;filter.Q.value=0.8;air.gain.value=0.025;
-          noise.connect(filter);filter.connect(air);air.connect(envelope);
-          finish(vibrato,[vibrato,depth],now+duration);
-          finish(noise,[noise,filter,air],now+duration);
-          finish(source,[source,envelope],now+duration);
-        };
-        const phrases=[[587.33,783.99,528],[622.25,587.33,528],[783.99,880,622.25,528]];
-        const phrase=()=>{
-          const notes=phrases[Math.floor(random(0,phrases.length))];
-          notes.forEach((frequency,i)=>later(()=>flute(frequency),i*2.5));
+        });
+        runGroup((own,later,finish)=>{
+          const flute=frequency=>{
+            const now=ctx.currentTime,duration=3.2;
+            const source=own(ctx.createOscillator()),envelope=own(ctx.createGain());
+            const vibrato=own(ctx.createOscillator()),depth=own(ctx.createGain());
+            source.type='sine';source.frequency.value=frequency;vibrato.frequency.value=5.5;
+            depth.gain.setValueAtTime(0,now);depth.gain.setValueAtTime(0,now+duration/2);
+            depth.gain.linearRampToValueAtTime(2.5,now+duration-0.4);
+            vibrato.connect(depth);depth.connect(source.frequency);
+            envelope.gain.setValueAtTime(0,now);envelope.gain.linearRampToValueAtTime(0.13,now+0.8);
+            envelope.gain.setValueAtTime(0.13,now+duration-1);envelope.gain.linearRampToValueAtTime(0,now+duration);
+            source.connect(envelope);envelope.connect(master);
+            const noise=own(ctx.createBufferSource()),filter=own(ctx.createBiquadFilter()),air=own(ctx.createGain());
+            const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*duration),ctx.sampleRate),samples=buffer.getChannelData(0);
+            for(let i=0;i<samples.length;i++)samples[i]=random(-1,1);
+            noise.buffer=buffer;filter.type='bandpass';filter.frequency.value=1800;filter.Q.value=0.8;air.gain.value=0.025;
+            noise.connect(filter);filter.connect(air);air.connect(envelope);
+            finish(vibrato,[vibrato,depth],now+duration);
+            finish(noise,[noise,filter,air],now+duration);
+            finish(source,[source,envelope],now+duration);
+          };
+          const phrases=[[587.33,783.99,528],[622.25,587.33,528],[783.99,880,622.25,528]];
+          const phrase=()=>{
+            const notes=phrases[Math.floor(random(0,phrases.length))];
+            notes.forEach((frequency,i)=>later(()=>flute(frequency),i*2.5));
+            later(phrase,random(9,16));
+          };
           later(phrase,random(9,16));
-        };
-        const bell=()=>{
-          const now=ctx.currentTime;
-          for(const [frequency,level] of [[888,0.055],[1776,0.008]]){
-            const source=own(ctx.createOscillator()),gain=own(ctx.createGain());source.frequency.value=frequency;
-            gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(level,now+0.003);
-            gain.gain.exponentialRampToValueAtTime(0.00001,now+1.2);
-            source.connect(gain);gain.connect(master);finish(source,[source,gain],now+1.3);
-          }
+        });
+        runGroup((own,later,finish)=>{
+          const bell=()=>{
+            const now=ctx.currentTime;
+            for(const [frequency,level] of [[888,0.055],[1776,0.008]]){
+              const source=own(ctx.createOscillator()),gain=own(ctx.createGain());source.frequency.value=frequency;
+              gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(level,now+0.003);
+              gain.gain.exponentialRampToValueAtTime(0.00001,now+1.2);
+              source.connect(gain);gain.connect(master);finish(source,[source,gain],now+1.3);
+            }
+            later(bell,random(15,35));
+          };
           later(bell,random(15,35));
-        };
-        melody();later(phrase,random(9,16));later(bell,random(15,35));
-      }catch(e){stopBgm()}
+        });
+      }catch(e){} // A failed start can be retried by the next explicit gesture.
     }
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
@@ -430,8 +474,8 @@
     function makeAction(cards,variant){const key=cards[2].el,choice=ACTIONS[key][variant%ACTIONS[key].length];return{title:choice,text:`「${cards[2].name}」が示すのは、${cards[2].desc}。全部を変えようとせず、${choice}ことから始めてみましょう。`}}
     function render(animate=true){
       if(state.revealing)return;state.revealing=true;const cards=state.draw.ids.map(id=>CARDS[id]);
-      cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');pashi();vibrate()};animate?setTimeout(reveal,180+i*430):reveal()});
-      const delay=animate?1550:30;setTimeout(()=>{
+      cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');pashi();vibrate()};animate?setTimeout(reveal,60+i*280):reveal()});
+      const delay=animate?1050:30;setTimeout(()=>{
         const w=weather(cards);$('#weatherTitle').textContent=w;$('#weatherMessage').textContent=WEATHER[w].msg;
         $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p>${c.id===43?`<p class="oni-note">${ONI_NOTES[i]}</p>`:''}</article>`).join('');
         const a=makeAction(cards,state.draw.variant);$('#actionTitle').textContent=a.title;$('#actionText').textContent=a.text;$('#result').classList.add('show');$('#drawBtn').textContent='本日は占い済み';$('#drawBtn').disabled=true;state.revealing=false;
@@ -479,18 +523,14 @@
     function updateSound(){const on=state.sound;$('#soundBtn').setAttribute('aria-pressed',String(on));$('#soundIcon').textContent=on?'♪':'×';$('#soundText').textContent=on?'音あり':'消音'}
     $('#drawBtn').addEventListener('click',()=>{
       drawStarted=true;clearTimeout(registerTimer);
-      if(state.sound)try{
-        const A=window.AudioContext||window.webkitAudioContext;
-        const ctx=pashi.ctx||(pashi.ctx=new A());
-        if(ctx.state==='suspended')ctx.resume().catch(()=>{});
-      }catch(e){}
-      startBgm();
+      if(state.sound)unlockAudio();
       if(!state.draw){
         state.draw=randomDraw();
         const stored=data();stored.days=stored.days||{};stored.days[state.today]=state.draw;save(stored);
         state.draw.ids.map(id=>CARDS[id]).forEach((c,i)=>$('#card'+i+' .front').innerHTML=cardFront(c));
       }
       render(true);
+      startBgm();
     });
     $('#againBtn').addEventListener('click',()=>$('#drawStage').scrollIntoView({behavior:'smooth'}));
     $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();if(state.sound)startBgm();else stopBgm();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
