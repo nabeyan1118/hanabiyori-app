@@ -66,6 +66,9 @@
     @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
     @media(max-width:480px){.shell{width:min(100% - 22px,760px);padding-top:15px}.hero{padding-top:18px}.stage{padding-inline:12px}.cards{gap:7px}.slot-label{letter-spacing:0}.reading-head{flex-wrap:wrap}.reading-card{width:100%;margin-left:25px}.sound .sound-text{display:none}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card-inner,.draw,.toast{transition:none}.result.show{animation:none}}
+    .register-prompt{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:76px;width:min(360px,calc(100% - 32px));max-height:calc(100dvh - 100px);overflow:auto;padding:22px;background:var(--kinari);color:var(--sumi);border:1px solid #c6aa58;border-radius:16px;box-shadow:0 8px 32px #0004;z-index:20;animation:rise .3s ease-out}
+    .register-prompt[hidden]{display:none}.register-prompt h2{font-family:"Zen Old Mincho",serif;font-size:1.1rem;margin:0 0 12px}.register-prompt p{font-size:.8rem;line-height:1.9;margin:0 0 16px}.register-prompt-actions{display:flex;gap:12px;flex-wrap:wrap}.register-prompt button{min-height:44px;padding:8px 14px;border:1px solid #c6aa58;border-radius:8px;background:#142d20;color:var(--kinari);cursor:pointer}.register-prompt button:last-child{background:transparent;color:var(--sumi)}
+    @media(prefers-reduced-motion:reduce){.register-prompt{animation:none}}
   </style>
   <link rel="stylesheet" href="auth-ui.css">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -79,7 +82,7 @@
     <header>
       <div class="brand"><span class="crest">日</span><span class="brand-sub">HANAFUDA BIYORI</span></div>
       <button class="sound" id="soundBtn" type="button" aria-pressed="true"><span aria-hidden="true" id="soundIcon">♪</span> <span class="sound-text" id="soundText">音あり</span></button>
-      <button class="sound" id="accountToggle" type="button" aria-controls="accountPanel" aria-expanded="false">ログイン／マイページ</button>
+      <button class="sound" id="accountToggle" type="button" aria-controls="accountPanel" aria-expanded="false">ログイン・登録</button>
     </header>
     <section id="accountPanel" class="account-panel" aria-label="ログイン・マイページ" hidden></section>
 
@@ -137,6 +140,15 @@
     <footer><div class="footer-brand">花札日和</div>巡りを知って、過ごし方を選ぶ。</footer>
   </main>
   <div class="toast" id="toast" role="status"></div>
+
+  <aside class="register-prompt" id="registerPrompt" aria-labelledby="registerPromptTitle" hidden>
+    <h2 id="registerPromptTitle">あなたの巡りを、残しませんか</h2>
+    <p>メールアドレスを登録すると、毎日の巡りが記録に残るようになります。パスワードは不要で、登録は無料です。</p>
+    <div class="register-prompt-actions">
+      <button id="registerNow" type="button">登録する（無料）</button>
+      <button id="registerLater" type="button">あとで</button>
+    </div>
+  </aside>
 
   <script src="measure.js"></script>
   <script>
@@ -425,11 +437,48 @@
         const a=makeAction(cards,state.draw.variant);$('#actionTitle').textContent=a.title;$('#actionText').textContent=a.text;$('#result').classList.add('show');$('#drawBtn').textContent='本日は占い済み';$('#drawBtn').disabled=true;state.revealing=false;
         const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored);
         window.__hbRecordReading?.();
+        if(animate)scheduleRegisterPrompt('A');
         if(animate)$('#result').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
       },delay)
     }
+    const registerKey='hanabiyori.registerPrompt';
+    let registerTimer=null,drawStarted=false;
+    function registerRecord(){
+      try{
+        const record=JSON.parse(localStorage.getItem(registerKey));
+        if(record && Number.isInteger(record.count) && record.count>=0 && typeof record.lastDate==='string')return record;
+      }catch{}
+      return {count:0,lastDate:''};
+    }
+    function closeRegisterPrompt(){$('#registerPrompt').hidden=true}
+    function scheduleRegisterPrompt(kind){
+      const record=registerRecord(),today=keyFor(new Date());
+      if(record.count>=2 || (kind==='A'?record.count!==0:record.count!==1 || record.lastDate>=today || drawStarted))return;
+      clearTimeout(registerTimer);
+      registerTimer=setTimeout(()=>{
+        registerTimer=null;
+        const latest=registerRecord(),date=keyFor(new Date());
+        if(document.body?.dataset.authState!=='out' || state.revealing || $('#accountPanel').hidden===false)return;
+        if(kind==='A'?latest.count!==0:latest.count!==1 || latest.lastDate>=date || drawStarted)return;
+        // Persist before displaying; unavailable storage must not cause repeat prompts.
+        try{localStorage.setItem(registerKey,JSON.stringify({count:latest.count+1,lastDate:date}))}catch{return}
+        $('#registerPrompt').hidden=false;
+      },kind==='A'?5000:3000);
+    }
+    $('#registerLater').addEventListener('click',closeRegisterPrompt);
+    $('#registerNow').addEventListener('click',()=>{
+      closeRegisterPrompt();
+      const panel=$('#accountPanel');
+      if(panel?.hidden)$('#accountToggle')?.click();
+      $('#loginForm input[name="email"]')?.focus();
+    });
+    $('#accountToggle').addEventListener('click',closeRegisterPrompt);
+    if(typeof MutationObserver!=='undefined')new MutationObserver(()=>{
+      if(document.body.dataset.authState!=='out')closeRegisterPrompt();
+    }).observe(document.body,{attributes:true,attributeFilter:['data-auth-state']});
     function updateSound(){const on=state.sound;$('#soundBtn').setAttribute('aria-pressed',String(on));$('#soundIcon').textContent=on?'♪':'×';$('#soundText').textContent=on?'音あり':'消音'}
     $('#drawBtn').addEventListener('click',()=>{
+      drawStarted=true;clearTimeout(registerTimer);
       if(state.sound)try{
         const A=window.AudioContext||window.webkitAudioContext;
         const ctx=pashi.ctx||(pashi.ctx=new A());
@@ -446,7 +495,7 @@
     $('#againBtn').addEventListener('click',()=>$('#drawStage').scrollIntoView({behavior:'smooth'}));
     $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();if(state.sound)startBgm();else stopBgm();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
     $$('.reflection-actions button').forEach(b=>b.addEventListener('click',()=>{const stored=data(),d=stored.days?.[previousKey()];if(d){d.reflection=b.dataset.reflect;save(stored)}$('#reflection').classList.remove('show');showToast('昨日の記録を残しました')}));
-    formatDate();prepare();
+    formatDate();prepare();scheduleRegisterPrompt('C');
   })();
   </script>
   <script type="module" src="auth-ui.js"></script>
