@@ -251,7 +251,34 @@
       const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
       return `<svg viewBox="0 0 92 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}、${c.rank}"><rect width="92" height="124" fill="${c.cl}" rx="5"/><rect x="3" y="3" width="86" height="118" rx="3" fill="none" stroke="${c.ac}" stroke-width="${c.rank==='光'?1.4:.7}" opacity=".62"/>${center}<path d="${motif}" stroke="${c.ac}" stroke-width="1.45" fill="none" opacity=".42"/><rect x="3" y="85" width="86" height="36" fill="${c.ac}" opacity=".11"/><line x1="3" y1="85" x2="89" y2="85" stroke="${c.ac}" opacity=".35"/><text x="46" y="100" text-anchor="middle" font-size="6.4" fill="${c.ac}" font-family="serif" font-weight="bold">${c.name}</text><text x="46" y="115" text-anchor="middle" font-size="5.1" fill="${c.ac}" opacity=".7" font-family="serif">${c.mj}　${c.rank}</text></svg>`
     }
-    function pashi(){if(!state.sound)return;try{const A=window.AudioContext||window.webkitAudioContext;const ctx=pashi.ctx||(pashi.ctx=new A());const b=ctx.createBuffer(1,ctx.sampleRate*.075,ctx.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++){const t=i/ctx.sampleRate;d[i]=(Math.random()*2-1)*Math.exp(-t*78)*.55}const s=ctx.createBufferSource(),g=ctx.createGain();g.gain.setValueAtTime(1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.075);s.buffer=b;s.connect(g);g.connect(ctx.destination);s.start()}catch(e){}}
+    function pashi(){
+      if(!state.sound)return;
+      try{
+        const A=window.AudioContext||window.webkitAudioContext;
+        const ctx=pashi.ctx||(pashi.ctx=new A());
+        if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+        const now=ctx.currentTime;
+        const scrapeDuration=0.14;
+        const scrape=ctx.createBuffer(1,Math.round(ctx.sampleRate*scrapeDuration),ctx.sampleRate),scrapeData=scrape.getChannelData(0);
+        for(let i=0;i<scrapeData.length;i++){
+          const t=i/ctx.sampleRate;
+          scrapeData[i]=(Math.random()*2-1)*Math.pow(Math.sin(Math.PI*t/scrapeDuration),1.5);
+        }
+        const scrapeSource=ctx.createBufferSource(),filter=ctx.createBiquadFilter();
+        scrapeSource.buffer=scrape;filter.type='bandpass';filter.Q.value=0.7;
+        filter.frequency.setValueAtTime(500,now);
+        filter.frequency.linearRampToValueAtTime(2600,now+scrapeDuration);
+        scrapeSource.connect(filter);filter.connect(ctx.destination);scrapeSource.start(now);
+        const snapDuration=0.06;
+        const snap=ctx.createBuffer(1,Math.round(ctx.sampleRate*snapDuration),ctx.sampleRate),snapData=snap.getChannelData(0);
+        for(let i=0;i<snapData.length;i++){
+          const t=i/ctx.sampleRate;
+          snapData[i]=(Math.random()*2-1)*Math.exp(-t*85)*0.9;
+        }
+        const snapSource=ctx.createBufferSource();snapSource.buffer=snap;
+        snapSource.connect(ctx.destination);snapSource.start(now+0.13);
+      }catch(e){}
+    }
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
     const ONI_NOTES=['鬼札 ― 今日は雷の気配。思いがけない知らせが、空気を切り替えそうです。', '鬼札 ― 滞って見えるものも、ふいのきっかけで姿を変えていくかもしれません。', '鬼札 ― 予定にない一手を、今日は軽く拾ってみて。その一手が、流れを変えるきっかけになりそうです。'];
@@ -278,7 +305,14 @@
       },delay)
     }
     function updateSound(){const on=state.sound;$('#soundBtn').setAttribute('aria-pressed',String(on));$('#soundIcon').textContent=on?'♪':'×';$('#soundText').textContent=on?'音あり':'消音'}
-    $('#drawBtn').addEventListener('click',()=>render(true));
+    $('#drawBtn').addEventListener('click',()=>{
+      if(state.sound)try{
+        const A=window.AudioContext||window.webkitAudioContext;
+        const ctx=pashi.ctx||(pashi.ctx=new A());
+        if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+      }catch(e){}
+      render(true);
+    });
     $('#againBtn').addEventListener('click',()=>$('#drawStage').scrollIntoView({behavior:'smooth'}));
     $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
     $$('.reflection-actions button').forEach(b=>b.addEventListener('click',()=>{const stored=data(),d=stored.days?.[previousKey()];if(d){d.reflection=b.dataset.reflect;save(stored)}$('#reflection').classList.remove('show');showToast('昨日の記録を残しました')}));
