@@ -279,6 +279,117 @@
         snapSource.connect(ctx.destination);snapSource.start(now+0.13);
       }catch(e){}
     }
+    // BGM shares pashi.ctx; only explicit user gestures call startBgm().
+    let bgm=null;
+    function stopBgm(){
+      const session=bgm;bgm=null;
+      if(!session)return;
+      for(const timer of session.timers)try{clearTimeout(timer)}catch(e){}
+      for(const node of session.nodes){
+        try{if(node.stop)node.stop()}catch(e){}
+        try{node.disconnect()}catch(e){}
+      }
+      session.timers.clear();session.nodes.clear();
+    }
+    function startBgm(){
+      if(!state.sound||bgm)return;
+      try{
+        const A=window.AudioContext||window.webkitAudioContext;
+        if(!A)return;
+        const ctx=pashi.ctx||(pashi.ctx=new A());
+        if(ctx.state==='closed')return;
+        const session={timers:new Set(),nodes:new Set()};bgm=session;
+        if(ctx.state==='suspended')ctx.resume().catch(()=>{if(bgm===session)stopBgm()});
+        const own=node=>{session.nodes.add(node);return node};
+        const master=own(ctx.createGain());master.gain.value=0.12;master.connect(ctx.destination);
+        const random=(min,max)=>min+Math.random()*(max-min);
+        const later=(fn,seconds)=>{
+          const timer=setTimeout(()=>{
+            session.timers.delete(timer);
+            if(bgm!==session||!state.sound)return;
+            try{fn()}catch(e){stopBgm()}
+          },seconds*1000);
+          session.timers.add(timer);
+        };
+        const finish=(source,nodes,end)=>{
+          source.onended=()=>{for(const node of nodes)try{node.disconnect();session.nodes.delete(node)}catch(e){}};
+          source.start();source.stop(end);
+        };
+        const scale=[293.66,311.13,392.00,440.00,466.16,587.33,622.25,783.99,880.00,932.33];
+        const pluck=frequency=>{
+          const length=Math.round(ctx.sampleRate*3.5),period=ctx.sampleRate/frequency-0.5;
+          const delay=new Float32Array(Math.ceil(period)),buffer=ctx.createBuffer(1,length,ctx.sampleRate);
+          for(let i=0;i<delay.length;i++)delay[i]=random(-1,1);
+          const samples=buffer.getChannelData(0),whole=Math.floor(period),fraction=period-whole;
+          // Fractional delay plus the averaging filter's half-sample delay preserves tuning.
+          for(let i=0;i<length;i++){
+            const a=i-whole,b=a-1;
+            const x=a<0?delay[(a+delay.length)%delay.length]:samples[a];
+            const y=b<0?delay[(b+delay.length)%delay.length]:samples[b];
+            const c=b-1,z=c<0?delay[(c+delay.length)%delay.length]:samples[c];
+            samples[i]=0.996*((1-fraction)*(x+y)+fraction*(y+z))*0.5;
+          }
+          const source=own(ctx.createBufferSource()),gain=own(ctx.createGain()),now=ctx.currentTime;
+          source.buffer=buffer;gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.38,now+0.004);
+          gain.gain.exponentialRampToValueAtTime(0.0001,now+3.5);
+          source.connect(gain);gain.connect(master);finish(source,[source,gain],now+3.5);
+        };
+        let index=4;
+        const melody=()=>{
+          const r=Math.random(),step=r<0.4?-1:r<0.8?1:r<0.875?-2:r<0.95?2:0;
+          index=Math.max(0,Math.min(scale.length-1,index+step));
+          const frequency=scale[index];pluck(frequency);
+          if(Math.random()<0.15)later(()=>pluck(frequency),0.2);
+          later(melody,random(1.1,2.3));
+        };
+        const drone=own(ctx.createGain());drone.gain.value=0.16;drone.connect(master);
+        const breath=own(ctx.createOscillator()),breathDepth=own(ctx.createGain());
+        breath.frequency.value=1/11;breathDepth.gain.value=0.06;
+        breath.connect(breathDepth);breathDepth.connect(drone.gain);breath.start();
+        for(const [frequency,level] of [[264,0.28],[396,0.065],[528,0.045],[220,0.055]]){
+          const source=own(ctx.createOscillator()),gain=own(ctx.createGain());
+          source.type='sine';source.frequency.value=frequency;gain.gain.value=level;
+          source.connect(gain);gain.connect(drone);source.start();
+        }
+        const flute=frequency=>{
+          const now=ctx.currentTime,duration=3.2;
+          const source=own(ctx.createOscillator()),envelope=own(ctx.createGain());
+          const vibrato=own(ctx.createOscillator()),depth=own(ctx.createGain());
+          source.type='sine';source.frequency.value=frequency;vibrato.frequency.value=5.5;
+          depth.gain.setValueAtTime(0,now);depth.gain.setValueAtTime(0,now+duration/2);
+          depth.gain.linearRampToValueAtTime(2.5,now+duration-0.4);
+          vibrato.connect(depth);depth.connect(source.frequency);
+          envelope.gain.setValueAtTime(0,now);envelope.gain.linearRampToValueAtTime(0.13,now+0.8);
+          envelope.gain.setValueAtTime(0.13,now+duration-1);envelope.gain.linearRampToValueAtTime(0,now+duration);
+          source.connect(envelope);envelope.connect(master);
+          const noise=own(ctx.createBufferSource()),filter=own(ctx.createBiquadFilter()),air=own(ctx.createGain());
+          const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*duration),ctx.sampleRate),samples=buffer.getChannelData(0);
+          for(let i=0;i<samples.length;i++)samples[i]=random(-1,1);
+          noise.buffer=buffer;filter.type='bandpass';filter.frequency.value=1800;filter.Q.value=0.8;air.gain.value=0.025;
+          noise.connect(filter);filter.connect(air);air.connect(envelope);
+          finish(vibrato,[vibrato,depth],now+duration);
+          finish(noise,[noise,filter,air],now+duration);
+          finish(source,[source,envelope],now+duration);
+        };
+        const phrases=[[587.33,783.99,528],[622.25,587.33,528],[783.99,880,622.25,528]];
+        const phrase=()=>{
+          const notes=phrases[Math.floor(random(0,phrases.length))];
+          notes.forEach((frequency,i)=>later(()=>flute(frequency),i*2.5));
+          later(phrase,random(9,16));
+        };
+        const bell=()=>{
+          const now=ctx.currentTime;
+          for(const [frequency,level] of [[888,0.055],[1776,0.008]]){
+            const source=own(ctx.createOscillator()),gain=own(ctx.createGain());source.frequency.value=frequency;
+            gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(level,now+0.003);
+            gain.gain.exponentialRampToValueAtTime(0.00001,now+1.2);
+            source.connect(gain);gain.connect(master);finish(source,[source,gain],now+1.3);
+          }
+          later(bell,random(15,35));
+        };
+        melody();later(phrase,random(9,16));later(bell,random(15,35));
+      }catch(e){stopBgm()}
+    }
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
     const ONI_NOTES=['鬼札 ― 今日は雷の気配。思いがけない知らせが、空気を切り替えそうです。', '鬼札 ― 滞って見えるものも、ふいのきっかけで姿を変えていくかもしれません。', '鬼札 ― 予定にない一手を、今日は軽く拾ってみて。その一手が、流れを変えるきっかけになりそうです。'];
@@ -311,10 +422,11 @@
         const ctx=pashi.ctx||(pashi.ctx=new A());
         if(ctx.state==='suspended')ctx.resume().catch(()=>{});
       }catch(e){}
+      startBgm();
       render(true);
     });
     $('#againBtn').addEventListener('click',()=>$('#drawStage').scrollIntoView({behavior:'smooth'}));
-    $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
+    $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();if(state.sound)startBgm();else stopBgm();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
     $$('.reflection-actions button').forEach(b=>b.addEventListener('click',()=>{const stored=data(),d=stored.days?.[previousKey()];if(d){d.reflection=b.dataset.reflect;save(stored)}$('#reflection').classList.remove('show');showToast('昨日の記録を残しました')}));
     formatDate();prepare();
   })();
