@@ -1,0 +1,7 @@
+{
+  "name": "hanabiyori-repo-root",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0"
+  }
+}
