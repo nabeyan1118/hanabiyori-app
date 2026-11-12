@@ -22,7 +22,7 @@ function cacheBirthElement(birthDate) {
 }
 
 panel.innerHTML = `
-  <h2 tabindex="-1">ログイン／マイページ</h2>
+  <h2 tabindex="-1">ログイン・登録</h2>
   <p id="accountStatus" role="status" aria-live="polite">ログインの準備をしています。</p>
   <form id="loginForm" hidden>
     <label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
@@ -73,12 +73,13 @@ profile.addEventListener('change', updateControls);
 async function showSession(next) {
   const current = ++revision;
   session = next;
+  document.body.dataset.authState = session ? 'in' : 'out';
   cacheBirthElement(null);
   resetProfile();
   login.hidden = !!session;
   memberArea.hidden = true;
-  toggle.textContent = session ? 'マイページ' : 'ログイン／マイページ';
-  if (!session) { say('メールアドレスに、ログイン用のリンクをお送りします。パスワードは不要です。'); return; }
+  toggle.textContent = session ? 'マイページ' : 'ログイン・登録';
+  if (!session) { say('登録済みの方は、登録したメールアドレスを入れてください。そのままログインできます。はじめての方も、同じ欄からそのまま登録できます。パスワードは不要です。'); return; }
   say('プロフィールを読み込んでいます。');
   const { data, error } = await client.from('profiles_meishiki')
     .select('birth_date,birth_time,birth_time_unknown,save_consent')
