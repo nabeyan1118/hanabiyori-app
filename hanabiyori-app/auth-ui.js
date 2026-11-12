@@ -7,6 +7,20 @@ let session = null;
 let revision = 0;
 let busy = false;
 
+function birthElement(birthDate) {
+  const day = Date.parse(birthDate + 'T00:00:00Z');
+  const days = (day - Date.UTC(2000, 0, 1)) / 86400000;
+  const index = ((54 + days) % 60 + 60) % 60;
+  return ['木', '火', '土', '金', '水'][Math.floor((index % 10) / 2)];
+}
+function cacheBirthElement(birthDate) {
+  try {
+    const element = birthDate ? birthElement(birthDate) : null;
+    if (element) localStorage.setItem('hanabiyori.nichishu_el', element);
+    else localStorage.removeItem('hanabiyori.nichishu_el');
+  } catch {}
+}
+
 panel.innerHTML = `
   <h2 tabindex="-1">ログイン／マイページ</h2>
   <p id="accountStatus" role="status" aria-live="polite">ログインの準備をしています。</p>
@@ -59,6 +73,7 @@ profile.addEventListener('change', updateControls);
 async function showSession(next) {
   const current = ++revision;
   session = next;
+  cacheBirthElement(null);
   resetProfile();
   login.hidden = !!session;
   memberArea.hidden = true;
@@ -70,6 +85,7 @@ async function showSession(next) {
     .eq('member_id', session.user.id).maybeSingle();
   if (current !== revision) return;
   if (error) { say('プロフィールを読み込めませんでした。マイページを開き直すか、ページを再読み込みしてください。'); return; }
+  cacheBirthElement(data?.birth_date);
   if (data) {
     fields.birth_date.value = data.birth_date || '';
     fields.birth_time.value = data.birth_time || '';
@@ -123,7 +139,10 @@ profile.addEventListener('submit', (event) => {
     if (insertError) throw insertError;
     const { error } = await client.from('profiles_meishiki').update(values).eq('member_id', userId);
     if (error) throw error;
-    if (session?.user.id === userId) say('プロフィールを保存しました。');
+    if (session?.user.id === userId) {
+      cacheBirthElement(values.birth_date);
+      say('プロフィールを保存しました。');
+    }
   });
 });
 async function callFunction(name, options = {}) {
@@ -153,6 +172,7 @@ panel.querySelector('#deleteData').addEventListener('click', () => {
   perform(async () => {
     await callFunction('delete-my-data', { method: 'POST', body: JSON.stringify({ confirm: true }) });
     resetProfile();
+    cacheBirthElement(null);
     say('命式プロフィールと巡り手帳を削除しました。');
   });
 });
