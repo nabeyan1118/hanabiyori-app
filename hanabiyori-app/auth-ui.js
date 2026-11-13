@@ -6,6 +6,11 @@ let client;
 let session = null;
 let revision = 0;
 let busy = false;
+let knownEmail = null;
+const memoryKey = 'hanabiyori.member_email';
+function rememberedEmail() {
+  try { return localStorage.getItem(memoryKey); } catch { return null; }
+}
 
 function birthElement(birthDate) {
   const day = Date.parse(birthDate + 'T00:00:00Z');
@@ -27,8 +32,19 @@ panel.innerHTML = `
   <form id="loginForm" hidden>
     <label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
     <p class="auth-note">リンクのメールは、認証サービス「Supabase Auth」の名前で届きます。迷惑メールフォルダに振り分けられることがあるので、届かないときはそちらも確認してください。</p>
-    <button type="submit">ログイン用リンクを送る</button>
+    <button type="submit">メールアドレスで進む</button>
   </form>
+  <div id="knownArea" hidden>
+    <h3>顔見知り状態</h3>
+    <label>生年月日<input id="knownBirthDate" type="date" readonly></label>
+    <p id="knownBirthTime"></p>
+    <h3>過去の巡り</h3>
+    <ul id="knownReadings"></ul>
+    <div class="account-actions">
+      <button id="verifyMember" type="button">本人確認して編集する</button>
+      <button id="forgetMember" type="button">この端末の記憶を消す</button>
+    </div>
+  </div>
   <div id="memberArea" hidden>
     <h3>命式プロフィール</h3>
     <p>保存した記録は、この画面で確認・書き出し・削除できます。出生時間が不明な場合は簡易鑑定になります。</p>
@@ -48,6 +64,7 @@ panel.innerHTML = `
   </div>`;
 const status = panel.querySelector('#accountStatus');
 const login = panel.querySelector('#loginForm');
+const knownArea = panel.querySelector('#knownArea');
 const memberArea = panel.querySelector('#memberArea');
 const profile = panel.querySelector('#profileForm');
 const fields = profile.elements;
@@ -74,12 +91,28 @@ async function showSession(next) {
   const current = ++revision;
   session = next;
   document.body.dataset.authState = session ? 'in' : 'out';
+  knownEmail = null;
+  delete document.body.dataset.memberState;
+  knownArea.hidden = true;
   cacheBirthElement(null);
   resetProfile();
   login.hidden = !!session;
   memberArea.hidden = true;
   toggle.textContent = session ? 'マイページ' : 'ログイン・登録';
-  if (!session) { say('登録済みの方は、登録したメールアドレスを入れてください。そのままログインできます。はじめての方も、同じ欄からそのまま登録できます。パスワードは不要です。'); return; }
+  if (!session) {
+    const email = rememberedEmail();
+    if (email) {
+      try {
+        const result = await lookup(email);
+        if (current !== revision || session) return;
+        if (result.found) { showKnown(email, result); return; }
+        try { localStorage.removeItem(memoryKey); } catch {}
+      } catch {
+        if (current === revision) say('時間をおいて試してください。');
+        return;
+      }
+    }
+    say('登録済みの方は、登録したメールアドレスを入れてください。そのままログインできます。はじめての方も、同じ欄からそのまま登録できます。パスワードは不要です。'); return; }
   say('プロフィールを読み込んでいます。');
   const { data, error } = await client.from('profiles_meishiki')
     .select('birth_date,birth_time,birth_time_unknown,save_consent')
@@ -102,22 +135,101 @@ async function perform(action) {
   busy = true;
   updateControls();
   try { await action(); }
-  catch { say('操作を完了できませんでした。時間をおいて、もう一度お試しください。'); }
+  catch (error) { say(error.message === 'Lookup failed' ? '時間をおいて試してください。' : '操作を完了できませんでした。時間をおいて、もう一度お試しください。'); }
   finally { busy = false; updateControls(); }
 }
+async function publicFunction(name, body) {
+  const response = await fetch(`/.netlify/functions/${name}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body), cache: 'no-store',
+  });
+  if (!response.ok) throw new Error('Request failed');
+  return response.json();
+}
+async function lookup(email) {
+  try { return await publicFunction('member-lookup', { email }); }
+  catch { say('時間をおいて試してください。'); throw new Error('Lookup failed'); }
+}
+async function sendMagicLink(email) {
+  const redirect = new URL(location.href);
+  redirect.hash = '';
+  redirect.searchParams.delete('code');
+  const { error } = await client.auth.signInWithOtp({ email,
+    options: { emailRedirectTo: redirect.href } });
+  if (error) throw error;
+  say('メールを確認してください。「Supabase Auth」から届いたリンクでログインできます。');
+}
+function showKnown(email, result) {
+  if (session) return;
+  knownEmail = email.trim().toLowerCase();
+  try { localStorage.setItem(memoryKey, knownEmail); } catch {}
+  document.body.dataset.memberState = 'known';
+  cacheBirthElement(result.birthDate);
+  login.hidden = true;
+  memberArea.hidden = true;
+  knownArea.hidden = false;
+  toggle.textContent = 'マイページ';
+  panel.querySelector('#knownBirthDate').value = result.birthDate || '';
+  panel.querySelector('#knownBirthTime').textContent = result.birthDate
+    ? (result.birthTimeUnknown ? '出生時間は不明' : '') : '生年月日は未登録です。';
+  const entries = window.__hbImportPastReadings?.(result.pastReadings) || [];
+  const list = panel.querySelector('#knownReadings');
+  list.replaceChildren();
+  for (const entry of entries) {
+    const item = document.createElement('li');
+    item.textContent = `${entry.date}：${entry.names.join('・')}`;
+    list.append(item);
+  }
+  if (!entries.length) {
+    const item = document.createElement('li');
+    item.textContent = '過去の巡りはまだありません。';
+    list.append(item);
+  }
+  say('顔見知り状態です。そのまま占いを始められます。');
+  panel.hidden = true;
+  toggle.setAttribute('aria-expanded', 'false');
+}
+panel.querySelector('#verifyMember').addEventListener('click', () => perform(async () => {
+  if (!session && knownEmail) await sendMagicLink(knownEmail);
+}));
+panel.querySelector('#forgetMember').addEventListener('click', () => {
+  if (session || busy) return;
+  ++revision;
+  try { localStorage.removeItem(memoryKey); } catch {}
+  knownEmail = null;
+  delete document.body.dataset.memberState;
+  knownArea.hidden = true;
+  login.hidden = false;
+  login.reset();
+  cacheBirthElement(null);
+  toggle.textContent = 'ログイン・登録';
+  say('この端末の記憶を消しました。');
+});
+// Keep the existing anonymous measurement hook and its timing intact.
+const measureReading = window.__hbRecordReading;
+window.__hbRecordReading = () => {
+  try { Promise.resolve(measureReading?.()).catch(() => {}); } catch {}
+  const email = session?.user?.email || knownEmail;
+  if (!email) return;
+  try {
+    const now = new Date();
+    const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+    const draw = JSON.parse(localStorage.getItem('hanabiyori.free.v2'))?.days?.[date];
+    if (draw) publicFunction('record-reading', { email, date, cards: draw.ids, variant: draw.variant }).catch(() => {});
+  } catch {}
+};
 login.addEventListener('submit', (event) => {
   event.preventDefault();
   perform(async () => {
     const button = login.querySelector('button');
     button.disabled = true;
     try {
-      const redirect = new URL(location.href);
-      redirect.hash = '';
-      redirect.searchParams.delete('code');
-      const { error } = await client.auth.signInWithOtp({ email: login.elements.email.value.trim(),
-        options: { emailRedirectTo: redirect.href } });
-      if (error) throw error;
-      say('メールを確認してください。「Supabase Auth」から届いたリンクでログインできます。');
+      const email = login.elements.email.value.trim().toLowerCase();
+      const current = revision;
+      const result = await lookup(email);
+      if (current !== revision || session) return;
+      if (result.found) { showKnown(email, result); return; }
+      await sendMagicLink(email);
     } finally { button.disabled = false; }
   });
 });
