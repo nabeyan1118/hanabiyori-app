@@ -250,6 +250,18 @@
     function previousKey(){const d=new Date();d.setDate(d.getDate()-1);return keyFor(d)}
     function data(){try{return JSON.parse(localStorage.getItem(STORAGE))||{}}catch(e){return{}}}
     function save(v){try{localStorage.setItem(STORAGE,JSON.stringify(v))}catch(e){}}
+    // Import only compatible free-reading draws; a local date always wins.
+    window.__hbImportPastReadings=(entries)=>{
+      const stored=data();stored.days=stored.days||{};
+      const valid=draw=>draw && Array.isArray(draw.ids) && draw.ids.length===3 && new Set(draw.ids).size===3 && draw.ids.every(id=>Number.isInteger(id)&&!!CARDS[id]) && Number.isInteger(draw.variant) && draw.variant>=0 && draw.variant<3;
+      for(const entry of Array.isArray(entries)?entries:[]){
+        if(!entry || typeof entry.date!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(entry.date) || !valid(entry.cards))continue;
+        if(!Object.prototype.hasOwnProperty.call(stored.days,entry.date))stored.days[entry.date]={ids:[...entry.cards.ids],variant:entry.cards.variant};
+      }
+      save(stored);
+      if(!state.draw && !state.revealing && valid(stored.days[state.today]))prepare();
+      return Object.keys(stored.days).sort().reverse().filter(date=>valid(stored.days[date])).slice(0,14).map(date=>({date,names:stored.days[date].ids.map(id=>CARDS[id].name)}));
+    };
     function drawRandom(){return crypto.getRandomValues(new Uint32Array(1))[0]/2**32}
     function randomDraw(){
       const pool=[...CARDS];
@@ -502,7 +514,7 @@
       registerTimer=setTimeout(()=>{
         registerTimer=null;
         const latest=registerRecord(),date=keyFor(new Date());
-        if(document.body?.dataset.authState!=='out' || state.revealing || $('#accountPanel').hidden===false)return;
+        if(document.body?.dataset.authState!=='out' || document.body?.dataset.memberState==='known' || state.revealing || $('#accountPanel').hidden===false)return;
         if(kind==='A'?latest.count!==0:latest.count!==1 || latest.lastDate>=date || drawStarted)return;
         // Persist before displaying; unavailable storage must not cause repeat prompts.
         try{localStorage.setItem(registerKey,JSON.stringify({count:latest.count+1,lastDate:date}))}catch{return}
@@ -518,8 +530,8 @@
     });
     $('#accountToggle').addEventListener('click',closeRegisterPrompt);
     if(typeof MutationObserver!=='undefined')new MutationObserver(()=>{
-      if(document.body.dataset.authState!=='out')closeRegisterPrompt();
-    }).observe(document.body,{attributes:true,attributeFilter:['data-auth-state']});
+      if(document.body.dataset.authState!=='out' || document.body.dataset.memberState==='known')closeRegisterPrompt();
+    }).observe(document.body,{attributes:true,attributeFilter:['data-auth-state','data-member-state']});
     function updateSound(){const on=state.sound;$('#soundBtn').setAttribute('aria-pressed',String(on));$('#soundIcon').textContent=on?'♪':'×';$('#soundText').textContent=on?'音あり':'消音'}
     $('#drawBtn').addEventListener('click',()=>{
       drawStarted=true;clearTimeout(registerTimer);
