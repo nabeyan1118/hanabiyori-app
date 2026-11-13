@@ -22,6 +22,8 @@
 <button id="t2">テスト2：札をめくる音（パシッ）</button>
 <button id="t3">テスト3：ピッという音（別の出し方）</button>
 
+<div class="lab">いまの音の状態（大きく表示されます）</div>
+<div id="stateBig" style="background:#14231a;border:2px solid #c6aa58;border-radius:10px;padding:14px;font-size:1.3rem;text-align:center;margin-bottom:8px">まだボタンを押していません</div>
 <div class="lab">状態の記録（このまま見せてください）</div>
 <div id="log">まだ何も押していません</div>
 <audio id="sink" playsinline style="display:none"></audio>
@@ -30,13 +32,16 @@
 (function(){
   var logEl=document.getElementById('log'), lines=[];
   function log(s){ lines.push(s); logEl.textContent=lines.join('\n'); }
+  var big=document.getElementById('stateBig');
+  function showState(){ if(ctx) big.textContent='いまの状態：'+ctx.state; }
+  setInterval(showState, 500);
   var ctx=null;
   function ensure(){
     if(!ctx){
       var A=window.AudioContext||window.webkitAudioContext;
       ctx=new A();
       log('AudioContext を作りました。状態='+ctx.state+'／サンプルレート='+ctx.sampleRate);
-      if(ctx.addEventListener)ctx.addEventListener('statechange',function(){ log('状態が変わりました → '+ctx.state); });
+      if(ctx.addEventListener)ctx.addEventListener('statechange',function(){ log('状態が変わりました → '+ctx.state); showState(); });
     }
     return ctx;
   }
