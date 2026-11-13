@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>音の診断｜花札日和</title>
+<style>
+  body{font-family:sans-serif;background:#0d1710;color:#f3e9d2;margin:0;padding:20px 16px 40px}
+  h1{font-size:1.1rem;margin:0 0 6px}
+  p{font-size:.85rem;line-height:1.7;color:#c9d2c0}
+  button{display:block;width:100%;min-height:56px;margin:14px 0;font-size:1rem;border-radius:10px;border:1px solid #c6aa58;background:#f8e2be;color:#142018}
+  button:active{opacity:.7}
+  #log{background:#14231a;border:1px solid #33503c;border-radius:8px;padding:10px 12px;font-size:.78rem;line-height:1.8;white-space:pre-wrap;word-break:break-all;min-height:120px}
+  .lab{font-size:.75rem;color:#c6aa58;margin-top:18px}
+</style>
+</head>
+<body>
+<h1>音の診断ページ</h1>
+<p>ボタンを 1 → 2 → 3 の順に押して、どのボタンで音が聞こえたかを教えてください。音量は少し上げておいてください。</p>
+
+<button id="t1">テスト1：ピッという音（ふつうの出し方）</button>
+<button id="t2">テスト2：札をめくる音（パシッ）</button>
+<button id="t3">テスト3：ピッという音（別の出し方）</button>
+
+<div class="lab">状態の記録（このまま見せてください）</div>
+<div id="log">まだ何も押していません</div>
+<audio id="sink" playsinline style="display:none"></audio>
+
+<script>
+(function(){
+  var logEl=document.getElementById('log'), lines=[];
+  function log(s){ lines.push(s); logEl.textContent=lines.join('\n'); }
+  var ctx=null;
+  function ensure(){
+    if(!ctx){
+      var A=window.AudioContext||window.webkitAudioContext;
+      ctx=new A();
+      log('AudioContext を作りました。状態='+ctx.state+'／サンプルレート='+ctx.sampleRate);
+      if(ctx.addEventListener)ctx.addEventListener('statechange',function(){ log('状態が変わりました → '+ctx.state); });
+    }
+    return ctx;
+  }
+  function resume(c,tag){
+    try{
+      var p=c.resume();
+      log(tag+'：再開を試みました（押した直後の状態='+c.state+'）');
+      if(p&&p.then)p.then(function(){ log(tag+'：再開の結果、状態='+c.state); },function(e){ log(tag+'：再開が失敗しました（'+e+'）'); });
+    }catch(e){ log(tag+'：再開で例外（'+e+'）'); }
+  }
+  function beep(dest){
+    var c=ensure(), t=c.currentTime;
+    var o=c.createOscillator(), g=c.createGain();
+    o.type='sine'; o.frequency.value=880;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.3,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+    o.connect(g); g.connect(dest||c.destination); o.start(t); o.stop(t+0.55);
+  }
+  document.getElementById('t1').addEventListener('click',function(){
+    var c=ensure(); resume(c,'テスト1'); beep(null);
+    setTimeout(function(){ log('テスト1：1秒後の状態='+c.state); },1000);
+  });
+  document.getElementById('t2').addEventListener('click',function(){
+    var c=ensure(); resume(c,'テスト2');
+    // 本番のめくり音（B案）と同じ生成
+    try{
+      var sr=c.sampleRate, dur=0.22, buf=c.createBuffer(1,Math.ceil(sr*dur),sr), d=buf.getChannelData(0);
+      var seed=22222; function rnd(){ seed=(seed*1103515245+12345)%2147483648; return seed/1073741824-1; }
+      var hp=0,bp=0;
+      for(var i=0;i<d.length;i++){ var tt=i/sr, w=rnd();
+        var f=500+(2600-500)*Math.min(1,tt/0.12);
+        var a=Math.sin(Math.PI*Math.min(1,tt/0.15)); a=Math.pow(a,1.5);
+        var x=w*Math.exp(-tt*26)*0.7; hp=x-bp; bp+=0.28*x; d[i]=hp*a*0.55;
+        if(tt>0.13){ var u=(tt-0.13)/0.06; if(u<1)d[i]+=rnd()*Math.exp(-u*5)*0.9*(1-u); } }
+      var src=c.createBufferSource(); src.buffer=buf;
+      var g=c.createGain(); g.gain.value=1;
+      var flt=c.createBiquadFilter(); flt.type='bandpass'; flt.frequency.value=1800; flt.Q.value=0.7;
+      src.connect(flt); flt.connect(g); g.connect(c.destination); src.start();
+      log('テスト2：めくり音を再生しました');
+    }catch(e){ log('テスト2：例外（'+e+'）'); }
+    setTimeout(function(){ log('テスト2：1秒後の状態='+c.state); },1000);
+  });
+  document.getElementById('t3').addEventListener('click',function(){
+    var c=ensure(); resume(c,'テスト3');
+    try{
+      var dest=c.createMediaStreamDestination();
+      var audio=document.getElementById('sink');
+      audio.srcObject=dest.stream;
+      var pr=audio.play();
+      if(pr&&pr.catch)pr.catch(function(e){ log('テスト3：audio の再生が失敗（'+e+'）'); });
+      beep(dest);
+      log('テスト3：別の出し方で再生しました');
+    }catch(e){ log('テスト3：例外（'+e+'）'); }
+    setTimeout(function(){ log('テスト3：1秒後の状態='+c.state); },1000);
+  });
+})();
+</script>
+</body>
+</html>
