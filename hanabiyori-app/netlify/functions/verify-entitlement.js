@@ -1,3 +1,4 @@
+const { withCors } = require('./_supabase');
 // ============================================================
 // 鑑定権トークンの検証(使い捨て方式)
 // トークンが存在し、未使用かどうかを確認する。
@@ -5,7 +6,7 @@
 // ============================================================
 const { getStore } = require("@netlify/blobs");
 
-exports.handler = async (event) => {
+exports.handler = withCors(async (event) => {
   const token = (event.queryStringParameters && event.queryStringParameters.token || "").trim();
   if (!token) {
     return { statusCode: 400, body: JSON.stringify({ error: "token is required" }) };
@@ -32,4 +33,4 @@ exports.handler = async (event) => {
   }
 
   return { statusCode: 200, body: JSON.stringify({ valid: true, used: false }) };
-};
+});

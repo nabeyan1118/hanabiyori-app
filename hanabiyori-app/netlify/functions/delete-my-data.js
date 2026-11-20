@@ -1,6 +1,7 @@
+const { withCors } = require('./_supabase');
 const { createServiceClient, requireUserId, json } = require('./_supabase');
 
-exports.handler = async (event) => {
+exports.handler = withCors(async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { error: 'Method not allowed' }, { Allow: 'POST' });
   try {
     const client = createServiceClient();
@@ -17,4 +18,4 @@ exports.handler = async (event) => {
   } catch (error) {
     return json(error.statusCode === 401 ? 401 : 500, { error: error.statusCode === 401 ? 'Unauthorized' : 'Deletion incomplete; please retry' });
   }
-};
+});

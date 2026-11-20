@@ -1,6 +1,7 @@
+const { withCors } = require('./_supabase');
 const { createServiceClient, json } = require('./_supabase');
 
-exports.handler = async (event) => {
+exports.handler = withCors(async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { ok: false }, { Allow: 'POST' });
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return json(400, { ok: false }); }
@@ -27,4 +28,4 @@ exports.handler = async (event) => {
   } catch {
     return json(500, { ok: false });
   }
-};
+});

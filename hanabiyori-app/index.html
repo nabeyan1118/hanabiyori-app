@@ -550,6 +550,27 @@
     formatDate();prepare();scheduleRegisterPrompt('C');
   })();
   </script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    window.hbLineAuth = (async () => {
+      try {
+        if (!window.liff) return null;
+        const LINE_AUTH_URL = 'https://lbokynfmrdipdjekzibj.supabase.co/functions/v1/line-auth';
+        const liffId = '2012718957-z5i5pyPU';
+        await liff.init({ liffId });
+        if (!liff.isInClient()) return null;
+        const idToken = liff.getIDToken();
+        if (!idToken) return null;
+        const response = await fetch(LINE_AUTH_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'status', idToken }), cache: 'no-store'
+        });
+        if (!response.ok) return { idToken };
+        const result = await response.json();
+        return { idToken, linked: result.linked };
+      } catch { return null; }
+    })();
+  </script>
   <script type="module" src="auth-ui.js"></script>
 </body>
 </html>

@@ -1,5 +1,8 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
+const FUNCTION_BASE = 'https://hanafuda-biyori.netlify.app/.netlify/functions';
+const LINE_AUTH_URL = 'https://lbokynfmrdipdjekzibj.supabase.co/functions/v1/line-auth';
+
 const panel = document.getElementById('accountPanel');
 const toggle = document.getElementById('accountToggle');
 let client;
@@ -7,6 +10,7 @@ let session = null;
 let revision = 0;
 let busy = false;
 let knownEmail = null;
+let lineInfo = null;
 const memoryKey = 'hanabiyori.member_email';
 function rememberedEmail() {
   try { return localStorage.getItem(memoryKey); } catch { return null; }
@@ -100,6 +104,10 @@ async function showSession(next) {
   memberArea.hidden = true;
   toggle.textContent = session ? 'マイページ' : 'ログイン・登録';
   if (!session) {
+    if (lineInfo?.idToken && typeof lineInfo.linked === 'boolean') {
+      say(lineInfo.linked ? 'LINE連携済みの会員です。記録の管理にはメールでログインしてください。' : 'メールでログインして連携する');
+      return;
+    }
     const email = rememberedEmail();
     if (email) {
       try {
@@ -129,7 +137,24 @@ async function showSession(next) {
   memberArea.hidden = false;
   updateControls();
   say('ログインしています。ご自身の記録を管理できます。');
+  await linkLine(current, next);
 }
+async function linkLine(current, next) {
+  if (!lineInfo?.idToken || !next?.access_token) return;
+  try {
+    const response = await fetch(LINE_AUTH_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${next.access_token}` },
+      body: JSON.stringify({ action: 'link', idToken: lineInfo.idToken }), cache: 'no-store',
+    });
+    if (current !== revision) return;
+    if (response.ok) say('LINEと連携しました');
+    else if (response.status === 409) say('このLINEアカウントは別の会員に紐づいています');
+  } catch {}
+}
+window.hbLineAuth?.then((info) => {
+  lineInfo = info;
+  if (info?.idToken && client) showSession(session).catch(() => {});
+});
 async function perform(action) {
   if (busy) return;
   busy = true;
@@ -139,7 +164,7 @@ async function perform(action) {
   finally { busy = false; updateControls(); }
 }
 async function publicFunction(name, body) {
-  const response = await fetch(`/.netlify/functions/${name}`, {
+  const response = await fetch(`${FUNCTION_BASE}/${name}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body), cache: 'no-store',
   });
@@ -261,7 +286,7 @@ profile.addEventListener('submit', (event) => {
 async function callFunction(name, options = {}) {
   const { data, error } = await client.auth.getSession();
   if (error || !data.session) throw new Error('Login required');
-  const response = await fetch(`/.netlify/functions/${name}`, {
+  const response = await fetch(`${FUNCTION_BASE}/${name}`, {
     ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
     cache: 'no-store',
   });

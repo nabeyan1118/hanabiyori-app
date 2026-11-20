@@ -23,4 +23,27 @@ function json(statusCode, value, extraHeaders = {}) {
     'Cache-Control': 'no-store', ...extraHeaders }, body: JSON.stringify(value) };
 }
 
-module.exports = { createServiceClient, requireUserId, json };
+function allowedOrigin(origin) {
+  return origin === 'https://hanabiyori-app.pages.dev' ||
+    (typeof origin === 'string' && /^https:\/\/[a-z0-9-]+\.hanabiyori-app\.pages\.dev$/.test(origin));
+}
+
+function withCors(handler) {
+  return async (event) => {
+    const origin = Object.entries(event.headers || {}).find(([name]) => name.toLowerCase() === 'origin')?.[1];
+    if (!allowedOrigin(origin)) return handler(event);
+    const headers = { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' };
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: { ...headers,
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization' }, body: '' };
+    const response = await handler(event);
+    const existingHeaders = { ...response.headers };
+    const varyKey = Object.keys(existingHeaders).find((name) => name.toLowerCase() === 'vary');
+    const vary = varyKey ? existingHeaders[varyKey] : '';
+    if (varyKey) delete existingHeaders[varyKey];
+    return { ...response, headers: { ...existingHeaders, ...headers,
+      Vary: vary ? `${vary}, Origin` : 'Origin' } };
+  };
+}
+
+module.exports = { createServiceClient, requireUserId, json, allowedOrigin, withCors };

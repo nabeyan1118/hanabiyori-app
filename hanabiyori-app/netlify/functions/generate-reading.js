@@ -1,3 +1,4 @@
+const { withCors } = require('./_supabase');
 // ============================================================
 // 有料八枚読みの本体(使い捨てトークン方式)
 // 1. 鑑定権(トークン)を検証(未使用のみ通過)
@@ -126,7 +127,7 @@ async function callOpenAI(payload) {
   return parsed;
 }
 
-exports.handler = async (event) => {
+exports.handler = withCors(async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "POSTのみ対応" }) };
   }
@@ -199,4 +200,4 @@ exports.handler = async (event) => {
   });
 
   return { statusCode: 200, body: JSON.stringify({ cards, yaku, result }) };
-};
+});

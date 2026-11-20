@@ -1,3 +1,4 @@
+const { withCors } = require('./_supabase');
 // ============================================================
 // 決済完了後、success.htmlから呼ばれる。
 // 注文IDから、Webhookが発行したトークンを引き当てる。
@@ -6,7 +7,7 @@
 // ============================================================
 const { getStore } = require("@netlify/blobs");
 
-exports.handler = async (event) => {
+exports.handler = withCors(async (event) => {
   const orderId = event.queryStringParameters && event.queryStringParameters.order_id;
   if (!orderId) {
     return { statusCode: 400, body: JSON.stringify({ error: "order_id is required" }) };
@@ -20,4 +21,4 @@ exports.handler = async (event) => {
   }
 
   return { statusCode: 200, body: JSON.stringify({ pending: false, token: record.token }) };
-};
+});
