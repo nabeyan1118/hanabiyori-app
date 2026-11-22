@@ -54,10 +54,6 @@
     header{margin-bottom:16px;flex-wrap:wrap}
     .brand{min-width:0}.brand-sub{font-size:11px;margin-top:0}
     .hero{padding:0 0 22px}.key-visual{display:block;width:100%;height:min(38vh,340px);max-height:55vh;object-fit:cover;object-position:50% 42%;margin-bottom:16px;border-radius:16px}
-    /* PHASE-KVFIX: PC幅では縦看板として全体表示 */
-    @media (min-width: 768px){
-      .key-visual{height:min(56vh,640px);width:auto;margin-inline:auto;}
-    }
     .hero h1{font-size:clamp(1.1rem,4.5vw,1.9rem);letter-spacing:.04em}
     .eyebrow{margin-bottom:10px}.lead{margin-top:10px;font-size:.8rem;line-height:1.8}.date{margin-top:12px;border-color:var(--month-accent);color:var(--month-accent)}
     .reading,.reflection{background:var(--kinari);color:var(--sumi);border-color:rgba(20,32,24,.25)}
@@ -97,12 +93,6 @@
       <h1 id="heroTitle">今日は、どんな日和だろう。</h1>
       <p class="lead">巡りを知れば、進む・整える・休むを選びやすくなる。<br>未来を決めるのではなく、今日を選ぶための花札占いです。</p>
       <div class="date" id="todayLabel" aria-label="今日の日付"></div>
-      <!-- PHASE-AUDIOFIX2 再生ボタン ここから -->
-      <style>
-        #playBgmBtn{background:var(--kinari);color:var(--sumi);border:1px solid var(--gold);margin-top:16px;min-height:44px;padding:9px 18px;font-size:.85rem}
-      </style>
-      <button type="button" id="playBgmBtn" class="sound" aria-pressed="false">♪ 開運Hzを流す</button>
-      <!-- PHASE-AUDIOFIX2 再生ボタン ここまで -->
     </section>
 
     <section class="reflection" id="reflection" aria-label="昨日の振り返り">
@@ -254,7 +244,6 @@
     };
     const STORAGE='hanabiyori.free.v2';
     const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-    const BUILD_ID='20261120-01';
     const state={sound:true,today:keyFor(new Date()),draw:null,revealing:false};
 
     function keyFor(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
@@ -300,35 +289,34 @@
       const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
       return `<svg viewBox="0 0 92 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}、${c.rank}"><rect width="92" height="124" fill="${c.cl}" rx="5"/><rect x="3" y="3" width="86" height="118" rx="3" fill="none" stroke="${c.ac}" stroke-width="${c.rank==='光'?1.4:.7}" opacity=".62"/>${center}<path d="${motif}" stroke="${c.ac}" stroke-width="1.45" fill="none" opacity=".42"/><rect x="3" y="85" width="86" height="36" fill="${c.ac}" opacity=".11"/><line x1="3" y1="85" x2="89" y2="85" stroke="${c.ac}" opacity=".35"/><text x="46" y="100" text-anchor="middle" font-size="6.4" fill="${c.ac}" font-family="serif" font-weight="bold">${c.name}</text><text x="46" y="115" text-anchor="middle" font-size="5.1" fill="${c.ac}" opacity=".7" font-family="serif">${c.mj}　${c.rank}</text></svg>`
     }
-    window.__hbDiag={notes:0,pashi:0,errors:[],startedAt:null};
-    function audioError(where,e){window.__hbDiag.errors.push({where,name:e?.name||'Error',message:String(e?.message||e)})}
     function audioCtx(){
       try{
         const A=window.AudioContext||window.webkitAudioContext;
         return pashi.ctx||(A?(pashi.ctx=new A()):null);
-      }catch(e){audioError('audioCtx',e);return null}
+      }catch(e){return null}
     }
     function unlockAudio(){
       const ctx=audioCtx();
       if(!ctx)return null;
       try{
-        if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(e=>audioError('unlockAudio.resume',e));
-      }catch(e){audioError('unlockAudio.resume',e)}
+        if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(()=>{});
+      }catch(e){}
       try{
         const source=ctx.createBufferSource();
         source.buffer=ctx.createBuffer(1,1,ctx.sampleRate);
         source.connect(ctx.destination);source.start();
-      }catch(e){audioError('unlockAudio.buffer',e)}
+      }catch(e){}
       return ctx;
     }
-    document.addEventListener('pointerdown',()=>{if(!pashi.ctx||pashi.ctx.state!=='running')unlockAudio()},true);
-    function pashi(when){
-      window.__hbDiag.pashi++;
+    function pashi(){
       if(!state.sound)return;
       try{
         const ctx=audioCtx();
         if(!ctx)return;
-        const now=when ?? ctx.currentTime;
+        try{
+          if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(()=>{});
+        }catch(e){}
+        const now=ctx.currentTime;
         const scrapeDuration=0.14;
         const scrape=ctx.createBuffer(1,Math.round(ctx.sampleRate*scrapeDuration),ctx.sampleRate),scrapeData=scrape.getChannelData(0);
         for(let i=0;i<scrapeData.length;i++){
@@ -348,61 +336,50 @@
         }
         const snapSource=ctx.createBufferSource();snapSource.buffer=snap;
         snapSource.connect(ctx.destination);snapSource.start(now+0.13);
-      }catch(e){audioError('pashi',e)}
+      }catch(e){}
     }
     // BGM shares pashi.ctx; only explicit user gestures call startBgm().
     let bgm=null;
     function stopBgmGroup(group){
       group.active=false;
-      for(const timer of group.timers)try{clearTimeout(timer)}catch(e){audioError('stop.group.timer',e)}
+      for(const timer of group.timers)try{clearTimeout(timer)}catch(e){}
       for(const node of group.nodes){
-        try{if(node.stop)node.stop()}catch(e){audioError('stop.group.node',e)}
-        try{node.disconnect()}catch(e){audioError('stop.group.disconnect',e)}
+        try{if(node.stop)node.stop()}catch(e){}
+        try{node.disconnect()}catch(e){}
       }
       group.timers.clear();group.nodes.clear();
     }
     function stopBgm(){
       const session=bgm;bgm=null;
       if(!session)return;
-      clearInterval(session.scheduler);clearInterval(session.watchdog);
       for(const group of session.groups)stopBgmGroup(group);
-      try{session.master.disconnect()}catch(e){audioError('stop.master',e)}
+      try{session.master.disconnect()}catch(e){}
     }
     function startBgm(){
-      if(!state.sound)return;
-      if(bgm){if(bgm.ctx.state!=='running'||(bgm.lastTick+1>bgm.ctx.currentTime && bgm.queue.length))return;stopBgm()}
+      if(!state.sound||bgm)return;
       try{
         const ctx=unlockAudio();
         if(!ctx||ctx.state==='closed')return;
         if(!state.sound||bgm)return;
         const master=ctx.createGain();master.gain.value=0.12;master.connect(ctx.destination);
-        const session={groups:[],master,ctx,queue:[],lastTick:ctx.currentTime,scheduler:null,watchdog:null};bgm=session;
-        window.__hbDiag.startedAt=Date.now();
-        let cursor=ctx.currentTime;
-        const tick=()=>{
-          if(bgm!==session||!state.sound)return;
-          session.lastTick=ctx.currentTime;
-          while(session.queue.length && session.queue[0].time<=ctx.currentTime+0.3){
-            const job=session.queue.shift();cursor=Math.max(job.time,ctx.currentTime);
-            if(job.group.active)try{job.fn()}catch(e){audioError('scheduler.callback',e)}
-          }
-        };
-        const startScheduler=()=>{clearInterval(session.scheduler);session.scheduler=setInterval(tick,50)};
-        startScheduler();
-        session.watchdog=setInterval(()=>{if(bgm===session&&state.sound&&ctx.state==='running'&&ctx.currentTime-session.lastTick>1){audioError('scheduler.watchdog',new Error('scheduler stalled'));startScheduler();tick()}},500);
+        const session={groups:[],master};bgm=session;
         const random=(min,max)=>min+Math.random()*(max-min);
         const runGroup=initialize=>{
           const group={active:true,timers:new Set(),nodes:new Set()};session.groups.push(group);
           const own=node=>{group.nodes.add(node);return node};
           const later=(fn,seconds)=>{
-            session.queue.push({fn,group,time:cursor+seconds});
-            session.queue.sort((a,b)=>a.time-b.time);
+            const timer=setTimeout(()=>{
+              group.timers.delete(timer);
+              if(!group.active||bgm!==session||!state.sound)return;
+              try{fn()}catch(e){stopBgmGroup(group)}
+            },seconds*1000);
+            group.timers.add(timer);
           };
           const finish=(source,nodes,end)=>{
-            source.onended=()=>{for(const node of nodes)try{node.disconnect();group.nodes.delete(node)}catch(e){audioError('source.onended',e)}};
-            source.start(cursor);source.stop(end);
+            source.onended=()=>{for(const node of nodes)try{node.disconnect();group.nodes.delete(node)}catch(e){}};
+            source.start();source.stop(end);
           };
-          try{initialize(own,later,finish)}catch(e){audioError('group.initialize',e)}
+          try{initialize(own,later,finish)}catch(e){stopBgmGroup(group)}
         };
         runGroup((own,later,finish)=>{
           const scale=[293.66,311.13,392.00,440.00,466.16,587.33,622.25,783.99,880.00,932.33];
@@ -422,9 +399,8 @@
                 const c=b-1,z=c<0?delay[(c+delay.length)%delay.length]:samples[c];
                 samples[i]=0.996*((1-fraction)*(x+y)+fraction*(y+z))*0.5;
               }
-            }catch(e){audioError('pluck.buffer',e);buffer=null}
-            const source=own(buffer?ctx.createBufferSource():ctx.createOscillator()),gain=own(ctx.createGain()),now=cursor;
-            window.__hbDiag.notes++;
+            }catch(e){buffer=null}
+            const source=own(buffer?ctx.createBufferSource():ctx.createOscillator()),gain=own(ctx.createGain()),now=ctx.currentTime;
             if(buffer)source.buffer=buffer;else{source.type='sine';source.frequency.value=frequency}
             gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.38,now+0.004);
             gain.gain.exponentialRampToValueAtTime(0.0001,now+3.5);
@@ -434,15 +410,13 @@
           const melody=()=>{
             const r=Math.random(),step=r<0.4?-1:r<0.8?1:r<0.875?-2:r<0.95?2:0;
             index=Math.max(0,Math.min(scale.length-1,index+step));
-            const frequency=scale[index];
+            const frequency=scale[index];pluck(frequency);
             if(Math.random()<0.15)later(()=>pluck(frequency),0.2);
             later(melody,random(1.1,2.3));
-            pluck(frequency);
           };
           melody();
         });
         runGroup((own,later,finish)=>{
-          window.__hbDiag.notes++;
           const drone=own(ctx.createGain());drone.gain.value=0.16;drone.connect(master);
           const breath=own(ctx.createOscillator()),breathDepth=own(ctx.createGain());
           breath.frequency.value=1/11;breathDepth.gain.value=0.06;
@@ -455,8 +429,7 @@
         });
         runGroup((own,later,finish)=>{
           const flute=frequency=>{
-            const now=cursor,duration=3.2;
-            window.__hbDiag.notes++;
+            const now=ctx.currentTime,duration=3.2;
             const source=own(ctx.createOscillator()),envelope=own(ctx.createGain());
             const vibrato=own(ctx.createOscillator()),depth=own(ctx.createGain());
             source.type='sine';source.frequency.value=frequency;vibrato.frequency.value=5.5;
@@ -478,26 +451,25 @@
           const phrases=[[587.33,783.99,528],[622.25,587.33,528],[783.99,880,622.25,528]];
           const phrase=()=>{
             const notes=phrases[Math.floor(random(0,phrases.length))];
-            later(phrase,random(9,16));
             notes.forEach((frequency,i)=>later(()=>flute(frequency),i*2.5));
+            later(phrase,random(9,16));
           };
           later(phrase,random(9,16));
         });
         runGroup((own,later,finish)=>{
           const bell=()=>{
-            const now=cursor;
-            window.__hbDiag.notes++;
-            later(bell,random(15,35));
+            const now=ctx.currentTime;
             for(const [frequency,level] of [[888,0.055],[1776,0.008]]){
               const source=own(ctx.createOscillator()),gain=own(ctx.createGain());source.frequency.value=frequency;
               gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(level,now+0.003);
               gain.gain.exponentialRampToValueAtTime(0.00001,now+1.2);
               source.connect(gain);gain.connect(master);finish(source,[source,gain],now+1.3);
             }
+            later(bell,random(15,35));
           };
           later(bell,random(15,35));
         });
-      }catch(e){audioError('startBgm',e);stopBgm()} // A failed start can be retried.
+      }catch(e){} // A failed start can be retried by the next explicit gesture.
     }
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
@@ -514,8 +486,7 @@
     function makeAction(cards,variant){const key=cards[2].el,choice=ACTIONS[key][variant%ACTIONS[key].length];return{title:choice,text:`「${cards[2].name}」が示すのは、${cards[2].desc}。全部を変えようとせず、${choice}ことから始めてみましょう。`}}
     function render(animate=true){
       if(state.revealing)return;state.revealing=true;const cards=state.draw.ids.map(id=>CARDS[id]);
-      if(animate && state.sound){const ctx=audioCtx();if(ctx)for(let i=0;i<3;i++)pashi(ctx.currentTime+0.06+i*0.28)}
-      cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');vibrate()};animate?setTimeout(reveal,60+i*280):reveal()});
+      cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');pashi();vibrate()};animate?setTimeout(reveal,60+i*280):reveal()});
       const delay=animate?1050:30;setTimeout(()=>{
         const w=weather(cards);$('#weatherTitle').textContent=w;$('#weatherMessage').textContent=WEATHER[w].msg;
         $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p>${c.id===43?`<p class="oni-note">${ONI_NOTES[i]}</p>`:''}</article>`).join('');
@@ -577,73 +548,8 @@
     $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();if(state.sound)startBgm();else stopBgm();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
     $$('.reflection-actions button').forEach(b=>b.addEventListener('click',()=>{const stored=data(),d=stored.days?.[previousKey()];if(d){d.reflection=b.dataset.reflect;save(stored)}$('#reflection').classList.remove('show');showToast('昨日の記録を残しました')}));
     formatDate();prepare();scheduleRegisterPrompt('C');
-    /* PHASE-AUDIOFIX2 ここから */
-    let lastDiagText='';
-    function updateDiagChip(){
-      const chip=document.getElementById('hbDiagChip');
-      if(!chip)return;
-      const a=pashi.ctx?pashi.ctx.state:'—';
-      const text=`版 ${BUILD_ID}｜音声：${a}｜音：${state.sound?'ON':'OFF'}`;
-      if(text!==lastDiagText){chip.textContent=text;lastDiagText=text}
-    }
-    setInterval(updateDiagChip,500);
-    let lastBuildCheck=-Infinity;
-    async function checkBuild(){
-      if(state.revealing)return;
-      const now=performance.now();
-      if(now-lastBuildCheck<10000)return;
-      lastBuildCheck=now;
-      try{
-        const response=await fetch('version.json',{cache:'no-store'});
-        if(!response.ok)return;
-        const version=await response.json();
-        if(!version || typeof version.build!=='string' || version.build===BUILD_ID || state.revealing)return;
-        const key='hb.buildReloadedFor';
-        if(sessionStorage.getItem(key)===version.build)return;
-        sessionStorage.setItem(key,version.build);
-        location.reload();
-      }catch{}
-    }
-    window.addEventListener('pageshow',checkBuild);
-    document.addEventListener('visibilitychange',()=>{
-      if(document.visibilityState==='visible')checkBuild();
-    });
-    /* PHASE-AUDIOFIX2 ここまで */
-    /* PHASE-AUDIOFIX2 再生ボタン ここから */
-    const playBgmBtn=document.getElementById('playBgmBtn');
-    let lastPlayBgmPlaying=null;
-    function syncPlayBgmButton(){
-      const playing = !!bgm;
-      if(playing!==lastPlayBgmPlaying){
-        playBgmBtn.textContent=playing?'開運Hzを止める':'♪ 開運Hzを流す';
-        playBgmBtn.setAttribute('aria-pressed',String(playing));
-        lastPlayBgmPlaying=playing;
-      }
-    }
-    syncPlayBgmButton();
-    playBgmBtn.addEventListener('click',()=>{
-      const playing = !!bgm;
-      if(playing){
-        stopBgm();
-        state.sound=false;
-      }else state.sound=true;
-      const stored=data();stored.sound=state.sound;save(stored);
-      updateSound();
-      if(!playing){unlockAudio();startBgm()}
-      showToast(playing?'音をオフにしました':'音をオンにしました');
-      syncPlayBgmButton();
-    });
-    $('#soundBtn').addEventListener('click',syncPlayBgmButton);
-    setInterval(syncPlayBgmButton,500);
-    /* PHASE-AUDIOFIX2 再生ボタン ここまで */
   })();
   </script>
   <script type="module" src="auth-ui.js"></script>
-<!-- PHASE-AUDIOFIX2 診断チップ ここから -->
-<style>
-  #hbDiagChip{position:fixed;right:8px;bottom:8px;z-index:9999;pointer-events:none;font-size:11px;line-height:1.5;padding:4px 8px;border-radius:8px;background:rgba(20,16,28,.62);color:#f5efe2;letter-spacing:.02em}
-</style>
-<div id="hbDiagChip">版 20261120-01｜音声：—｜音：ON</div>
-<!-- PHASE-AUDIOFIX2 診断チップ ここまで -->
 </body>
 </html>
