@@ -263,7 +263,7 @@
     function keyFor(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
     function previousKey(){const d=new Date();d.setDate(d.getDate()-1);return keyFor(d)}
     function data(){try{return JSON.parse(localStorage.getItem(STORAGE))||{}}catch(e){return{}}}
-    function save(v){try{localStorage.setItem(STORAGE,JSON.stringify(v))}catch(e){}}
+    function save(v){try{localStorage.setItem(STORAGE,JSON.stringify(v))}catch(e){audioError('save',e)}}
     // Import only compatible free-reading draws; a local date always wins.
     window.__hbImportPastReadings=(entries)=>{
       const stored=data();stored.days=stored.days||{};
@@ -303,7 +303,7 @@
       const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
       return `<svg viewBox="0 0 92 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}、${c.rank}"><rect width="92" height="124" fill="${c.cl}" rx="5"/><rect x="3" y="3" width="86" height="118" rx="3" fill="none" stroke="${c.ac}" stroke-width="${c.rank==='光'?1.4:.7}" opacity=".62"/>${center}<path d="${motif}" stroke="${c.ac}" stroke-width="1.45" fill="none" opacity=".42"/><rect x="3" y="85" width="86" height="36" fill="${c.ac}" opacity=".11"/><line x1="3" y1="85" x2="89" y2="85" stroke="${c.ac}" opacity=".35"/><text x="46" y="100" text-anchor="middle" font-size="6.4" fill="${c.ac}" font-family="serif" font-weight="bold">${c.name}</text><text x="46" y="115" text-anchor="middle" font-size="5.1" fill="${c.ac}" opacity=".7" font-family="serif">${c.mj}　${c.rank}</text></svg>`
     }
-    window.__hbDiag={notes:0,pashi:0,errors:[],startedAt:null};
+    window.__hbDiag={notes:0,pashi:0,pashiPlayed:0,drawEvents:[],errors:[],startedAt:null};
     function audioError(where,e){window.__hbDiag.errors.push({where,name:e?.name||'Error',message:String(e?.message||e)})}
     function audioCtx(){
       try{
@@ -314,6 +314,7 @@
     function unlockAudio(){
       const ctx=audioCtx();
       if(!ctx)return null;
+      if(ctx.state!=='closed')loadPashi(ctx);
       try{
         if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(e=>audioError('unlockAudio.resume',e));
       }catch(e){audioError('unlockAudio.resume',e)}
@@ -344,9 +345,16 @@
       if(!state.sound)return;
       try{
         const ctx=audioCtx();if(!ctx)return;
-        if(!pashiBuffer){loadPashi(ctx);return}
-        const source=ctx.createBufferSource();source.buffer=pashiBuffer;
-        source.connect(analyserFor(ctx));source.onended=()=>source.disconnect();source.start(when ?? ctx.currentTime);
+        const play=buffer=>{
+          if(!buffer)return;
+          try{
+            const source=ctx.createBufferSource();source.buffer=buffer;
+            source.connect(analyserFor(ctx));source.onended=()=>source.disconnect();
+            source.start(Math.max(when ?? ctx.currentTime,ctx.currentTime));
+            window.__hbDiag.pashiPlayed++;
+          }catch(e){audioError('pashi.play',e)}
+        };
+        if(pashiBuffer)play(pashiBuffer);else loadPashi(ctx).then(play);
       }catch(e){audioError('pashi',e)}
     }
     // BGM shares pashi.ctx; only explicit user gestures call startBgm().
@@ -373,6 +381,7 @@
       if(!state.sound||bgm)return;
       try{
         const ctx=unlockAudio();if(!ctx||ctx.state==='closed')return;
+        loadPashi(ctx);
         const request=++bgmRequest;
         loadBgm(ctx).then(buffer=>{
           if(!buffer||request!==bgmRequest||!state.sound||bgm)return;
@@ -410,7 +419,7 @@
         const w=weather(cards);$('#weatherTitle').textContent=w;$('#weatherMessage').textContent=WEATHER[w].msg;
         $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p>${c.id===43?`<p class="oni-note">${ONI_NOTES[i]}</p>`:''}</article>`).join('');
         const a=makeAction(cards,state.draw.variant);$('#actionTitle').textContent=a.title;$('#actionText').textContent=a.text;$('#result').classList.add('show');$('#drawBtn').textContent='本日は占い済み';$('#drawBtn').disabled=true;state.revealing=false;
-        const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored);
+        try{const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored)}catch(e){audioError('render.save',e)}
         window.__hbRecordReading?.();
         if(animate)scheduleRegisterPrompt('A');
         if(animate)$('#result').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
@@ -453,15 +462,24 @@
     }).observe(document.body,{attributes:true,attributeFilter:['data-auth-state','data-member-state']});
     function updateSound(){const on=state.sound;$('#soundBtn').setAttribute('aria-pressed',String(on));$('#soundIcon').textContent=on?'♪':'×';$('#soundText').textContent=on?'音あり':'消音'}
     $('#drawBtn').addEventListener('click',()=>{
+      const event=name=>window.__hbDiag.drawEvents.push({event:name,time:Date.now()});
+      event('handler');
       drawStarted=true;clearTimeout(registerTimer);
-      if(state.sound)unlockAudio();
+      try{if(state.sound)unlockAudio()}catch(e){audioError('draw.unlockAudio',e)}
       if(!state.draw){
-        state.draw=randomDraw();
-        const stored=data();stored.days=stored.days||{};stored.days[state.today]=state.draw;save(stored);
-        state.draw.ids.map(id=>CARDS[id]).forEach((c,i)=>$('#card'+i+' .front').innerHTML=cardFront(c));
+        try{state.draw=randomDraw()}catch(e){
+          audioError('draw.randomDraw',e);
+          const pool=[...CARDS];
+          for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+          state.draw={ids:pool.slice(0,3).map(c=>c.id),variant:Math.floor(Math.random()*3),created:Date.now()};
+        }
       }
-      render(true);
-      startBgm();
+      try{
+        state.draw.ids.forEach((id,i)=>{try{$('#card'+i+' .front').innerHTML=cardFront(CARDS[id])}catch(e){audioError('draw.cardFront.'+i,e)}});
+      }catch(e){audioError('draw.cardFront',e)}
+      event('fronts');
+      try{render(true);event('render')}catch(e){audioError('draw.render',e)}
+      try{startBgm()}catch(e){audioError('draw.startBgm',e)}
     });
     $('#againBtn').addEventListener('click',()=>$('#drawStage').scrollIntoView({behavior:'smooth'}));
     $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();if(state.sound)startBgm();else stopBgm();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
