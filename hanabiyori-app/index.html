@@ -74,6 +74,9 @@
     .register-prompt{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:76px;width:min(360px,calc(100% - 32px));max-height:calc(100dvh - 100px);overflow:auto;padding:22px;background:var(--kinari);color:var(--sumi);border:1px solid #c6aa58;border-radius:16px;box-shadow:0 8px 32px #0004;z-index:20;animation:rise .3s ease-out}
     .register-prompt[hidden]{display:none}.register-prompt h2{font-family:"Zen Old Mincho",serif;font-size:1.1rem;margin:0 0 12px}.register-prompt p{font-size:.8rem;line-height:1.9;margin:0 0 16px}.register-prompt-actions{display:flex;gap:12px;flex-wrap:wrap}.register-prompt button{min-height:44px;padding:8px 14px;border:1px solid #c6aa58;border-radius:8px;background:#142d20;color:var(--kinari);cursor:pointer}.register-prompt button:last-child{background:transparent;color:var(--sumi)}
     @media(prefers-reduced-motion:reduce){.register-prompt{animation:none}}
+    .account-panel .entry-tabs { display: flex; gap: 12px; }
+    .account-panel .entry-tabs .is-active { background: var(--sumi); color: var(--kinari); }
+    .account-panel .entry-section { display: grid; gap: 16px; }
   </style>
   <link rel="stylesheet" href="auth-ui.css">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -322,183 +325,70 @@
       return ctx;
     }
     document.addEventListener('pointerdown',()=>{if(!pashi.ctx||pashi.ctx.state!=='running')unlockAudio()},true);
+    let sharedAnalyser=null;
+    function analyserFor(ctx){
+      if(!sharedAnalyser || sharedAnalyser.context!==ctx){
+        sharedAnalyser=ctx.createAnalyser();sharedAnalyser.connect(ctx.destination);
+        window.__hbDiag.analyser=sharedAnalyser;
+      }
+      return sharedAnalyser;
+    }
+    let pashiBuffer=null,pashiLoad=null;
+    function loadPashi(ctx){
+      if(pashiBuffer)return Promise.resolve(pashiBuffer);
+      if(!pashiLoad)pashiLoad=fetch('pashi.m4a').then(r=>{if(!r.ok)throw new Error('pashi.m4a: HTTP '+r.status);return r.arrayBuffer()}).then(bytes=>ctx.decodeAudioData(bytes)).then(buffer=>pashiBuffer=buffer).catch(e=>{audioError('loadPashi',e);return null}).finally(()=>{pashiLoad=null});
+      return pashiLoad;
+    }
     function pashi(when){
       window.__hbDiag.pashi++;
       if(!state.sound)return;
       try{
-        const ctx=audioCtx();
-        if(!ctx)return;
-        const now=when ?? ctx.currentTime;
-        const scrapeDuration=0.14;
-        const scrape=ctx.createBuffer(1,Math.round(ctx.sampleRate*scrapeDuration),ctx.sampleRate),scrapeData=scrape.getChannelData(0);
-        for(let i=0;i<scrapeData.length;i++){
-          const t=i/ctx.sampleRate;
-          scrapeData[i]=(Math.random()*2-1)*Math.pow(Math.sin(Math.PI*t/scrapeDuration),1.5);
-        }
-        const scrapeSource=ctx.createBufferSource(),filter=ctx.createBiquadFilter();
-        scrapeSource.buffer=scrape;filter.type='bandpass';filter.Q.value=0.7;
-        filter.frequency.setValueAtTime(500,now);
-        filter.frequency.linearRampToValueAtTime(2600,now+scrapeDuration);
-        scrapeSource.connect(filter);filter.connect(ctx.destination);scrapeSource.start(now);
-        const snapDuration=0.06;
-        const snap=ctx.createBuffer(1,Math.round(ctx.sampleRate*snapDuration),ctx.sampleRate),snapData=snap.getChannelData(0);
-        for(let i=0;i<snapData.length;i++){
-          const t=i/ctx.sampleRate;
-          snapData[i]=(Math.random()*2-1)*Math.exp(-t*85)*0.9;
-        }
-        const snapSource=ctx.createBufferSource();snapSource.buffer=snap;
-        snapSource.connect(ctx.destination);snapSource.start(now+0.13);
+        const ctx=audioCtx();if(!ctx)return;
+        if(!pashiBuffer){loadPashi(ctx);return}
+        const source=ctx.createBufferSource();source.buffer=pashiBuffer;
+        source.connect(analyserFor(ctx));source.onended=()=>source.disconnect();source.start(when ?? ctx.currentTime);
       }catch(e){audioError('pashi',e)}
     }
     // BGM shares pashi.ctx; only explicit user gestures call startBgm().
-    let bgm=null;
-    function stopBgmGroup(group){
-      group.active=false;
-      for(const timer of group.timers)try{clearTimeout(timer)}catch(e){audioError('stop.group.timer',e)}
-      for(const node of group.nodes){
-        try{if(node.stop)node.stop()}catch(e){audioError('stop.group.node',e)}
-        try{node.disconnect()}catch(e){audioError('stop.group.disconnect',e)}
-      }
-      group.timers.clear();group.nodes.clear();
+    let bgm=null,bgmBuffer=null,bgmLoad=null,bgmRequest=0;
+    function loadBgm(ctx){
+      if(bgmBuffer)return Promise.resolve(bgmBuffer);
+      if(!bgmLoad)bgmLoad=fetch('bgm.m4a').then(r=>{if(!r.ok)throw new Error('bgm.m4a: HTTP '+r.status);return r.arrayBuffer()}).then(bytes=>ctx.decodeAudioData(bytes)).then(buffer=>bgmBuffer=buffer).catch(e=>{audioError('loadBgm',e);return null}).finally(()=>{bgmLoad=null});
+      return bgmLoad;
     }
     function stopBgm(){
+      bgmRequest++;
       const session=bgm;bgm=null;
       if(!session)return;
-      clearInterval(session.scheduler);clearInterval(session.watchdog);
-      for(const group of session.groups)stopBgmGroup(group);
-      try{session.master.disconnect()}catch(e){audioError('stop.master',e)}
+      try{session.source.stop()}catch(e){audioError('stopBgm.stop',e)}
+      try{session.source.disconnect();session.gain.disconnect()}catch(e){audioError('stopBgm.disconnect',e)}
+    }
+    function playBgmBuffer(ctx,buffer,offset){
+      const source=ctx.createBufferSource(),gain=ctx.createGain();
+      source.buffer=buffer;source.loop=true;gain.gain.value=1.0;
+      source.connect(gain);gain.connect(analyserFor(ctx));
+      source.start(0,offset);bgm={ctx,source,gain,buffer};
     }
     function startBgm(){
-      if(!state.sound)return;
-      if(bgm){if(bgm.ctx.state!=='running'||(bgm.lastTick+1>bgm.ctx.currentTime && bgm.queue.length))return;stopBgm()}
+      if(!state.sound||bgm)return;
       try{
-        const ctx=unlockAudio();
-        if(!ctx||ctx.state==='closed')return;
-        if(!state.sound||bgm)return;
-        const master=ctx.createGain();master.gain.value=0.12;master.connect(ctx.destination);
-        const session={groups:[],master,ctx,queue:[],lastTick:ctx.currentTime,scheduler:null,watchdog:null};bgm=session;
-        window.__hbDiag.startedAt=Date.now();
-        let cursor=ctx.currentTime;
-        const tick=()=>{
-          if(bgm!==session||!state.sound)return;
-          session.lastTick=ctx.currentTime;
-          while(session.queue.length && session.queue[0].time<=ctx.currentTime+0.3){
-            const job=session.queue.shift();cursor=Math.max(job.time,ctx.currentTime);
-            if(job.group.active)try{job.fn()}catch(e){audioError('scheduler.callback',e)}
-          }
-        };
-        const startScheduler=()=>{clearInterval(session.scheduler);session.scheduler=setInterval(tick,50)};
-        startScheduler();
-        session.watchdog=setInterval(()=>{if(bgm===session&&state.sound&&ctx.state==='running'&&ctx.currentTime-session.lastTick>1){audioError('scheduler.watchdog',new Error('scheduler stalled'));startScheduler();tick()}},500);
-        const random=(min,max)=>min+Math.random()*(max-min);
-        const runGroup=initialize=>{
-          const group={active:true,timers:new Set(),nodes:new Set()};session.groups.push(group);
-          const own=node=>{group.nodes.add(node);return node};
-          const later=(fn,seconds)=>{
-            session.queue.push({fn,group,time:cursor+seconds});
-            session.queue.sort((a,b)=>a.time-b.time);
-          };
-          const finish=(source,nodes,end)=>{
-            source.onended=()=>{for(const node of nodes)try{node.disconnect();group.nodes.delete(node)}catch(e){audioError('source.onended',e)}};
-            source.start(cursor);source.stop(end);
-          };
-          try{initialize(own,later,finish)}catch(e){audioError('group.initialize',e)}
-        };
-        runGroup((own,later,finish)=>{
-          const scale=[293.66,311.13,392.00,440.00,466.16,587.33,622.25,783.99,880.00,932.33];
-          const pluck=frequency=>{
-            let buffer;
-            try{
-              const length=Math.round(ctx.sampleRate*3.5),period=ctx.sampleRate/frequency-0.5;
-              const delay=new Float32Array(Math.ceil(period));
-              buffer=ctx.createBuffer(1,length,ctx.sampleRate);
-              for(let i=0;i<delay.length;i++)delay[i]=random(-1,1);
-              const samples=buffer.getChannelData(0),whole=Math.floor(period),fraction=period-whole;
-              // Fractional delay plus the averaging filter's half-sample delay preserves tuning.
-              for(let i=0;i<length;i++){
-                const a=i-whole,b=a-1;
-                const x=a<0?delay[(a+delay.length)%delay.length]:samples[a];
-                const y=b<0?delay[(b+delay.length)%delay.length]:samples[b];
-                const c=b-1,z=c<0?delay[(c+delay.length)%delay.length]:samples[c];
-                samples[i]=0.996*((1-fraction)*(x+y)+fraction*(y+z))*0.5;
-              }
-            }catch(e){audioError('pluck.buffer',e);buffer=null}
-            const source=own(buffer?ctx.createBufferSource():ctx.createOscillator()),gain=own(ctx.createGain()),now=cursor;
-            window.__hbDiag.notes++;
-            if(buffer)source.buffer=buffer;else{source.type='sine';source.frequency.value=frequency}
-            gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.38,now+0.004);
-            gain.gain.exponentialRampToValueAtTime(0.0001,now+3.5);
-            source.connect(gain);gain.connect(master);finish(source,[source,gain],now+3.5);
-          };
-          let index=4;
-          const melody=()=>{
-            const r=Math.random(),step=r<0.4?-1:r<0.8?1:r<0.875?-2:r<0.95?2:0;
-            index=Math.max(0,Math.min(scale.length-1,index+step));
-            const frequency=scale[index];
-            if(Math.random()<0.15)later(()=>pluck(frequency),0.2);
-            later(melody,random(1.1,2.3));
-            pluck(frequency);
-          };
-          melody();
+        const ctx=unlockAudio();if(!ctx||ctx.state==='closed')return;
+        const request=++bgmRequest;
+        loadBgm(ctx).then(buffer=>{
+          if(!buffer||request!==bgmRequest||!state.sound||bgm)return;
+          try{playBgmBuffer(ctx,buffer,0);window.__hbDiag.startedAt=Date.now()}
+          catch(e){audioError('startBgm',e);stopBgm()}
         });
-        runGroup((own,later,finish)=>{
-          window.__hbDiag.notes++;
-          const drone=own(ctx.createGain());drone.gain.value=0.16;drone.connect(master);
-          const breath=own(ctx.createOscillator()),breathDepth=own(ctx.createGain());
-          breath.frequency.value=1/11;breathDepth.gain.value=0.06;
-          breath.connect(breathDepth);breathDepth.connect(drone.gain);breath.start();
-          for(const [frequency,level] of [[264,0.28],[396,0.065],[528,0.045],[220,0.055]]){
-            const source=own(ctx.createOscillator()),gain=own(ctx.createGain());
-            source.type='sine';source.frequency.value=frequency;gain.gain.value=level;
-            source.connect(gain);gain.connect(drone);source.start();
-          }
-        });
-        runGroup((own,later,finish)=>{
-          const flute=frequency=>{
-            const now=cursor,duration=3.2;
-            window.__hbDiag.notes++;
-            const source=own(ctx.createOscillator()),envelope=own(ctx.createGain());
-            const vibrato=own(ctx.createOscillator()),depth=own(ctx.createGain());
-            source.type='sine';source.frequency.value=frequency;vibrato.frequency.value=5.5;
-            depth.gain.setValueAtTime(0,now);depth.gain.setValueAtTime(0,now+duration/2);
-            depth.gain.linearRampToValueAtTime(2.5,now+duration-0.4);
-            vibrato.connect(depth);depth.connect(source.frequency);
-            envelope.gain.setValueAtTime(0,now);envelope.gain.linearRampToValueAtTime(0.13,now+0.8);
-            envelope.gain.setValueAtTime(0.13,now+duration-1);envelope.gain.linearRampToValueAtTime(0,now+duration);
-            source.connect(envelope);envelope.connect(master);
-            const noise=own(ctx.createBufferSource()),filter=own(ctx.createBiquadFilter()),air=own(ctx.createGain());
-            const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*duration),ctx.sampleRate),samples=buffer.getChannelData(0);
-            for(let i=0;i<samples.length;i++)samples[i]=random(-1,1);
-            noise.buffer=buffer;filter.type='bandpass';filter.frequency.value=1800;filter.Q.value=0.8;air.gain.value=0.025;
-            noise.connect(filter);filter.connect(air);air.connect(envelope);
-            finish(vibrato,[vibrato,depth],now+duration);
-            finish(noise,[noise,filter,air],now+duration);
-            finish(source,[source,envelope],now+duration);
-          };
-          const phrases=[[587.33,783.99,528],[622.25,587.33,528],[783.99,880,622.25,528]];
-          const phrase=()=>{
-            const notes=phrases[Math.floor(random(0,phrases.length))];
-            later(phrase,random(9,16));
-            notes.forEach((frequency,i)=>later(()=>flute(frequency),i*2.5));
-          };
-          later(phrase,random(9,16));
-        });
-        runGroup((own,later,finish)=>{
-          const bell=()=>{
-            const now=cursor;
-            window.__hbDiag.notes++;
-            later(bell,random(15,35));
-            for(const [frequency,level] of [[888,0.055],[1776,0.008]]){
-              const source=own(ctx.createOscillator()),gain=own(ctx.createGain());source.frequency.value=frequency;
-              gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(level,now+0.003);
-              gain.gain.exponentialRampToValueAtTime(0.00001,now+1.2);
-              source.connect(gain);gain.connect(master);finish(source,[source,gain],now+1.3);
-            }
-          };
-          later(bell,random(15,35));
-        });
-      }catch(e){audioError('startBgm',e);stopBgm()} // A failed start can be retried.
+      }catch(e){audioError('startBgm',e);stopBgm()}
     }
+    window.__hbDiag.seekBgm=offsetSec=>{
+      if(!bgm)return false;
+      try{
+        const {ctx,buffer}=bgm;
+        if(!Number.isFinite(offsetSec)||offsetSec<0)return false;
+        stopBgm();playBgmBuffer(ctx,buffer,offsetSec%buffer.duration);return true;
+      }catch(e){audioError('seekBgm',e);stopBgm();return false}
+    };
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
     const ONI_NOTES=['鬼札 ― 今日は雷の気配。思いがけない知らせが、空気を切り替えそうです。', '鬼札 ― 滞って見えるものも、ふいのきっかけで姿を変えていくかもしれません。', '鬼札 ― 予定にない一手を、今日は軽く拾ってみて。その一手が、流れを変えるきっかけになりそうです。'];
