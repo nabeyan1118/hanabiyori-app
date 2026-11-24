@@ -50,6 +50,9 @@ window.addEventListener('unhandledrejection',e=>{s.errors.push(String(e.reason))
     .stage:after{content:"";position:absolute;inset:9px;border:1px solid rgba(198,170,88,.08);border-radius:16px;pointer-events:none}
     .stage-head{text-align:center;position:relative;z-index:1}.kicker{color:var(--green);font-size:.68rem;letter-spacing:.24em}.stage h2{font-family:"Zen Old Mincho";font-weight:400;font-size:1.25rem;letter-spacing:.1em;margin:9px 0 7px}.stage-copy{color:var(--muted);font-size:.76rem;line-height:1.8;margin:0}
     .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(9px,3vw,18px);margin:30px auto 26px;max-width:540px;position:relative;z-index:1}
+    .reveal-glow{position:absolute;inset:15% 0;z-index:3;pointer-events:none;background:linear-gradient(100deg,transparent 35%,rgba(248,226,190,.12) 48%,rgba(198,170,88,.24) 50%,transparent 64%);animation:reveal-glow 1.3s ease-out both}
+    @keyframes reveal-glow{0%{opacity:0;transform:translateX(-35%)}20%{opacity:1}100%{opacity:0;transform:translateX(35%)}}
+    @media(prefers-reduced-motion:reduce){.reveal-glow{visibility:hidden}}
     .slot{text-align:center;min-width:0}.slot-label{font-size:clamp(.57rem,2vw,.7rem);letter-spacing:.06em;color:#c3cab9;margin-bottom:9px;white-space:nowrap}.card{width:100%;aspect-ratio:92/124;position:relative;perspective:900px;filter:drop-shadow(0 9px 11px rgba(0,0,0,.3))}.card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .72s cubic-bezier(.22,.74,.18,1)}.card.revealed .card-inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:7px;overflow:hidden}.front img{display:block;width:100%;height:100%;object-fit:contain}.front{transform:rotateY(180deg);background:#101810}.back{display:grid;place-items:center;background:linear-gradient(145deg,#112818,#07120b);border:2px solid #b39143;box-shadow:inset 0 0 0 4px #0b170d,inset 0 0 0 5px rgba(198,170,88,.5)}.back:before{content:"花";display:grid;place-items:center;width:45%;aspect-ratio:1;border:1px solid rgba(198,170,88,.55);border-radius:50%;font-family:"Zen Old Mincho";font-size:clamp(1rem,5vw,1.65rem);color:#bda251;background:rgba(198,170,88,.04)}
     .draw-wrap{text-align:center;position:relative;z-index:2}.draw{border:1px solid #c5a955;border-radius:999px;background:linear-gradient(180deg,#b99b44,#8b6e28);color:#081009;padding:14px 30px;min-width:220px;font-weight:700;letter-spacing:.1em;cursor:pointer;box-shadow:0 9px 25px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.28);transition:.25s}.draw:hover{transform:translateY(-2px);filter:brightness(1.08)}.draw:disabled{cursor:default;transform:none;filter:saturate(.65);opacity:.72}.once{display:block;margin-top:11px;color:#71806f;font-size:.65rem}
     .result{display:none;margin-top:24px}.result.show{display:block;animation:rise .65s ease both}.weather{text-align:center;padding:27px 20px 23px;background:radial-gradient(circle at 50% 0%,rgba(198,170,88,.1),transparent 70%);border-bottom:1px solid var(--line)}.weather-label{font-size:.64rem;color:var(--gold);letter-spacing:.25em}.weather h2{font-family:"Zen Old Mincho";font-size:clamp(1.8rem,7vw,2.7rem);font-weight:400;letter-spacing:.12em;margin:9px 0 12px}.weather p{max-width:34rem;margin:auto;color:#c1c9bb;font-size:.85rem;line-height:1.95}
@@ -311,7 +314,13 @@ window.addEventListener('unhandledrejection',e=>{s.errors.push(String(e.reason))
       const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
       return `<svg viewBox="0 0 92 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}、${c.rank}"><rect width="92" height="124" fill="${c.cl}" rx="5"/><rect x="3" y="3" width="86" height="118" rx="3" fill="none" stroke="${c.ac}" stroke-width="${c.rank==='光'?1.4:.7}" opacity=".62"/>${center}<path d="${motif}" stroke="${c.ac}" stroke-width="1.45" fill="none" opacity=".42"/><rect x="3" y="85" width="86" height="36" fill="${c.ac}" opacity=".11"/><line x1="3" y1="85" x2="89" y2="85" stroke="${c.ac}" opacity=".35"/><text x="46" y="100" text-anchor="middle" font-size="6.4" fill="${c.ac}" font-family="serif" font-weight="bold">${c.name}</text><text x="46" y="115" text-anchor="middle" font-size="5.1" fill="${c.ac}" opacity=".7" font-family="serif">${c.mj}　${c.rank}</text></svg>`
     }
-    window.__hbDiag={notes:0,pashi:0,pashiPlayed:0,drawEvents:[],errors:[],startedAt:null};
+    window.__hbDiag={notes:0,pashi:0,pashiPlayed:0,drawEvents:[],errors:[],startedAt:null,preload:{started:false,done:0,failed:0}};
+    function preloadCardArt(){
+      const diag=window.__hbDiag.preload;if(diag.started)return;diag.started=true;
+      Object.values(CARD_ART).filter(Boolean).forEach(src=>{
+        try{const image=new Image();image.onload=()=>diag.done++;image.onerror=()=>diag.failed++;image.src=src}catch(e){diag.failed++}
+      });
+    }
     function audioError(where,e){window.__hbDiag.errors.push({where,name:e?.name||'Error',message:String(e?.message||e)})}
     function audioCtx(){
       try{
@@ -320,6 +329,7 @@ window.addEventListener('unhandledrejection',e=>{s.errors.push(String(e.reason))
       }catch(e){audioError('audioCtx',e);return null}
     }
     function unlockAudio(){
+      preloadCardArt();
       const ctx=audioCtx();
       if(!ctx)return null;
       if(ctx.state!=='closed')loadPashi(ctx);
@@ -386,6 +396,7 @@ window.addEventListener('unhandledrejection',e=>{s.errors.push(String(e.reason))
       source.start(0,offset);bgm={ctx,source,gain,buffer};
     }
     function startBgm(){
+      preloadCardArt();
       if(!state.sound||bgm)return;
       try{
         const ctx=unlockAudio();if(!ctx||ctx.state==='closed')return;
@@ -421,6 +432,10 @@ window.addEventListener('unhandledrejection',e=>{s.errors.push(String(e.reason))
     function makeAction(cards,variant){const key=cards[2].el,choice=ACTIONS[key][variant%ACTIONS[key].length];return{title:choice,text:`「${cards[2].name}」が示すのは、${cards[2].desc}。全部を変えようとせず、${choice}ことから始めてみましょう。`}}
     function render(animate=true){
       if(state.revealing)return;state.revealing=true;const cards=state.draw.ids.map(id=>CARDS[id]);
+      if(animate)try{
+        const glow=document.createElement('div');glow.className='reveal-glow';glow.setAttribute('aria-hidden','true');
+        glow.addEventListener('animationend',()=>glow.remove(),{once:true});$('#cards').appendChild(glow);
+      }catch(e){}
       if(animate && state.sound){const ctx=audioCtx();if(ctx)for(let i=0;i<3;i++)pashi(ctx.currentTime+0.06+i*0.28)}
       cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');vibrate()};animate?setTimeout(reveal,60+i*280):reveal()});
       const delay=animate?1050:30;setTimeout(()=>{
