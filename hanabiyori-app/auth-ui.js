@@ -34,9 +34,23 @@ panel.innerHTML = `
   <h2 tabindex="-1">ログイン・登録</h2>
   <p id="accountStatus" role="status" aria-live="polite">ログインの準備をしています。</p>
   <form id="loginForm" hidden>
-    <label>メールアドレス<input name="email" type="email" autocomplete="email" required></label>
-    <p class="auth-note">リンクのメールは、認証サービス「Supabase Auth」の名前で届きます。迷惑メールフォルダに振り分けられることがあるので、届かないときはそちらも確認してください。</p>
-    <button type="submit">メールアドレスで進む</button>
+    <div class="entry-tabs" aria-label="入口の選択">
+      <button type="button" data-entry-tab="member" aria-controls="entryMember" aria-pressed="false">会員の方</button>
+      <button type="button" data-entry-tab="new" aria-controls="entryNew" aria-pressed="true" class="is-active">はじめての方</button>
+    </div>
+    <div id="entryMember" class="entry-section" hidden>
+      <p>登録したメールアドレスを入れてください。そのまま入場できます。確認メールは送りません。</p>
+      <label>メールアドレス<input name="email_member" type="email" autocomplete="email" disabled></label>
+      <button type="submit" data-entry="member">このメールアドレスで入る</button>
+    </div>
+    <div id="entryNew" class="entry-section">
+      <p>メールアドレスを入れてください。登録用のリンクをお送りします。</p>
+      <label>メールアドレス<input name="email_new" type="email" autocomplete="email" required></label>
+      <p class="auth-note">リンクのメールは、認証サービス「Supabase Auth」の名前で届きます。迷惑メールフォルダに振り分けられることがあるので、届かないときはそちらも確認してください。</p>
+      <button type="submit" data-entry="new">登録メールを送る</button>
+    </div>
+    <p id="entryNotice" role="status" aria-live="polite" hidden></p>
+    <button type="button" id="entrySwitch" hidden></button>
   </form>
   <div id="knownArea" hidden>
     <h3>顔見知り状態</h3>
@@ -74,6 +88,39 @@ const profile = panel.querySelector('#profileForm');
 const fields = profile.elements;
 const save = panel.querySelector('#saveProfile');
 const say = (message) => { status.textContent = message; };
+let activeEntry = 'new';
+const entryNotice = login.querySelector('#entryNotice');
+const entrySwitch = login.querySelector('#entrySwitch');
+function clearEntryNotice() {
+  entryNotice.textContent = '';
+  entryNotice.hidden = true;
+  entrySwitch.hidden = true;
+}
+function selectEntry(kind) {
+  activeEntry = kind;
+  clearEntryNotice();
+  for (const entry of ['member', 'new']) {
+    const selected = entry === kind;
+    login.querySelector(entry === 'member' ? '#entryMember' : '#entryNew').hidden = !selected;
+    const input = login.elements[`email_${entry}`];
+    input.disabled = !selected;
+    input.required = selected;
+    const tab = login.querySelector(`[data-entry-tab="${entry}"]`);
+    tab.classList.toggle('is-active', selected);
+    tab.setAttribute('aria-pressed', String(selected));
+  }
+}
+function defaultEntry() {
+  selectEntry(rememberedEmail() ? 'member' : 'new');
+}
+login.querySelectorAll('[data-entry-tab]').forEach((tab) => {
+  tab.addEventListener('click', () => selectEntry(tab.dataset.entryTab));
+});
+entrySwitch.addEventListener('click', () => {
+  const target = activeEntry === 'member' ? 'new' : 'member';
+  login.elements[`email_${target}`].value = login.elements[`email_${activeEntry}`].value;
+  selectEntry(target);
+});
 function updateControls() {
   fields.birth_time.disabled = busy || fields.birth_time_unknown.checked;
   fields.birth_time.required = !fields.birth_time_unknown.checked;
@@ -104,6 +151,7 @@ async function showSession(next) {
   memberArea.hidden = true;
   toggle.textContent = session ? 'マイページ' : 'ログイン・登録';
   if (!session) {
+    defaultEntry();
     if (lineInfo?.idToken && typeof lineInfo.linked === 'boolean') {
       say(lineInfo.linked ? 'LINE連携済みの会員です。記録の管理にはメールでログインしてください。' : 'メールでログインして連携する');
       return;
@@ -120,7 +168,8 @@ async function showSession(next) {
         return;
       }
     }
-    say('登録済みの方は、登録したメールアドレスを入れてください。そのままログインできます。はじめての方も、同じ欄からそのまま登録できます。パスワードは不要です。'); return; }
+    defaultEntry();
+    say('登録済みの方は「会員の方」から、そのまま入場できます。はじめての方は「はじめての方」から登録できます。パスワードは不要です。'); return; }
   say('プロフィールを読み込んでいます。');
   const { data, error } = await client.from('profiles_meishiki')
     .select('birth_date,birth_time,birth_time_unknown,save_consent')
@@ -226,6 +275,7 @@ panel.querySelector('#forgetMember').addEventListener('click', () => {
   knownArea.hidden = true;
   login.hidden = false;
   login.reset();
+  defaultEntry();
   cacheBirthElement(null);
   toggle.textContent = 'ログイン・登録';
   say('この端末の記憶を消しました。');
@@ -245,16 +295,25 @@ window.__hbRecordReading = () => {
 };
 login.addEventListener('submit', (event) => {
   event.preventDefault();
+  clearEntryNotice();
+  const kind = event.submitter?.dataset.entry === activeEntry
+    ? event.submitter.dataset.entry : activeEntry;
   perform(async () => {
-    const button = login.querySelector('button');
+    const button = login.querySelector(`[data-entry="${kind}"]`);
     button.disabled = true;
     try {
-      const email = login.elements.email.value.trim().toLowerCase();
+      const email = login.elements[`email_${kind}`].value.trim().toLowerCase();
       const current = revision;
       const result = await lookup(email);
       if (current !== revision || session) return;
-      if (result.found) { showKnown(email, result); return; }
-      await sendMagicLink(email);
+      if (kind === 'member' && result.found) { showKnown(email, result); return; }
+      if (kind === 'new' && !result.found) { await sendMagicLink(email); return; }
+      entryNotice.textContent = kind === 'member'
+        ? 'このメールアドレスは、まだ登録されていないようです。'
+        : 'このメールアドレスは登録済みです。';
+      entrySwitch.textContent = kind === 'member' ? '新規登録はこちら' : '会員の入口はこちら';
+      entryNotice.hidden = false;
+      entrySwitch.hidden = false;
     } finally { button.disabled = false; }
   });
 });

@@ -42,6 +42,9 @@
     .stage:after{content:"";position:absolute;inset:9px;border:1px solid rgba(198,170,88,.08);border-radius:16px;pointer-events:none}
     .stage-head{text-align:center;position:relative;z-index:1}.kicker{color:var(--green);font-size:.68rem;letter-spacing:.24em}.stage h2{font-family:"Zen Old Mincho";font-weight:400;font-size:1.25rem;letter-spacing:.1em;margin:9px 0 7px}.stage-copy{color:var(--muted);font-size:.76rem;line-height:1.8;margin:0}
     .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(9px,3vw,18px);margin:30px auto 26px;max-width:540px;position:relative;z-index:1}
+    .reveal-glow{position:absolute;inset:15% 0;z-index:3;pointer-events:none;background:linear-gradient(100deg,transparent 35%,rgba(248,226,190,.12) 48%,rgba(198,170,88,.24) 50%,transparent 64%);animation:reveal-glow 1.3s ease-out both}
+    @keyframes reveal-glow{0%{opacity:0;transform:translateX(-35%)}20%{opacity:1}100%{opacity:0;transform:translateX(35%)}}
+    @media(prefers-reduced-motion:reduce){.reveal-glow{visibility:hidden}}
     .slot{text-align:center;min-width:0}.slot-label{font-size:clamp(.57rem,2vw,.7rem);letter-spacing:.06em;color:#c3cab9;margin-bottom:9px;white-space:nowrap}.card{width:100%;aspect-ratio:92/124;position:relative;perspective:900px;filter:drop-shadow(0 9px 11px rgba(0,0,0,.3))}.card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .72s cubic-bezier(.22,.74,.18,1)}.card.revealed .card-inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:7px;overflow:hidden}.front img{display:block;width:100%;height:100%;object-fit:contain}.front{transform:rotateY(180deg);background:#101810}.back{display:grid;place-items:center;background:linear-gradient(145deg,#112818,#07120b);border:2px solid #b39143;box-shadow:inset 0 0 0 4px #0b170d,inset 0 0 0 5px rgba(198,170,88,.5)}.back:before{content:"花";display:grid;place-items:center;width:45%;aspect-ratio:1;border:1px solid rgba(198,170,88,.55);border-radius:50%;font-family:"Zen Old Mincho";font-size:clamp(1rem,5vw,1.65rem);color:#bda251;background:rgba(198,170,88,.04)}
     .draw-wrap{text-align:center;position:relative;z-index:2}.draw{border:1px solid #c5a955;border-radius:999px;background:linear-gradient(180deg,#b99b44,#8b6e28);color:#081009;padding:14px 30px;min-width:220px;font-weight:700;letter-spacing:.1em;cursor:pointer;box-shadow:0 9px 25px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.28);transition:.25s}.draw:hover{transform:translateY(-2px);filter:brightness(1.08)}.draw:disabled{cursor:default;transform:none;filter:saturate(.65);opacity:.72}.once{display:block;margin-top:11px;color:#71806f;font-size:.65rem}
     .result{display:none;margin-top:24px}.result.show{display:block;animation:rise .65s ease both}.weather{text-align:center;padding:27px 20px 23px;background:radial-gradient(circle at 50% 0%,rgba(198,170,88,.1),transparent 70%);border-bottom:1px solid var(--line)}.weather-label{font-size:.64rem;color:var(--gold);letter-spacing:.25em}.weather h2{font-family:"Zen Old Mincho";font-size:clamp(1.8rem,7vw,2.7rem);font-weight:400;letter-spacing:.12em;margin:9px 0 12px}.weather p{max-width:34rem;margin:auto;color:#c1c9bb;font-size:.85rem;line-height:1.95}
@@ -54,6 +57,10 @@
     header{margin-bottom:16px;flex-wrap:wrap}
     .brand{min-width:0}.brand-sub{font-size:11px;margin-top:0}
     .hero{padding:0 0 22px}.key-visual{display:block;width:100%;height:min(38vh,340px);max-height:55vh;object-fit:cover;object-position:50% 42%;margin-bottom:16px;border-radius:16px}
+    /* PHASE-KVFIX: PC幅では縦看板として全体表示 */
+    @media (min-width: 768px){
+      .key-visual{height:min(56vh,640px);width:auto;margin-inline:auto;}
+    }
     .hero h1{font-size:clamp(1.1rem,4.5vw,1.9rem);letter-spacing:.04em}
     .eyebrow{margin-bottom:10px}.lead{margin-top:10px;font-size:.8rem;line-height:1.8}.date{margin-top:12px;border-color:var(--month-accent);color:var(--month-accent)}
     .reading,.reflection{background:var(--kinari);color:var(--sumi);border-color:rgba(20,32,24,.25)}
@@ -70,6 +77,9 @@
     .register-prompt{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:76px;width:min(360px,calc(100% - 32px));max-height:calc(100dvh - 100px);overflow:auto;padding:22px;background:var(--kinari);color:var(--sumi);border:1px solid #c6aa58;border-radius:16px;box-shadow:0 8px 32px #0004;z-index:20;animation:rise .3s ease-out}
     .register-prompt[hidden]{display:none}.register-prompt h2{font-family:"Zen Old Mincho",serif;font-size:1.1rem;margin:0 0 12px}.register-prompt p{font-size:.8rem;line-height:1.9;margin:0 0 16px}.register-prompt-actions{display:flex;gap:12px;flex-wrap:wrap}.register-prompt button{min-height:44px;padding:8px 14px;border:1px solid #c6aa58;border-radius:8px;background:#142d20;color:var(--kinari);cursor:pointer}.register-prompt button:last-child{background:transparent;color:var(--sumi)}
     @media(prefers-reduced-motion:reduce){.register-prompt{animation:none}}
+    .account-panel .entry-tabs { display: flex; gap: 12px; }
+    .account-panel .entry-tabs .is-active { background: var(--sumi); color: var(--kinari); }
+    .account-panel .entry-section { display: grid; gap: 16px; }
   </style>
   <link rel="stylesheet" href="auth-ui.css">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -93,6 +103,12 @@
       <h1 id="heroTitle">今日は、どんな日和だろう。</h1>
       <p class="lead">巡りを知れば、進む・整える・休むを選びやすくなる。<br>未来を決めるのではなく、今日を選ぶための花札占いです。</p>
       <div class="date" id="todayLabel" aria-label="今日の日付"></div>
+      <!-- PHASE-AUDIOFIX2 再生ボタン ここから -->
+      <style>
+        #playBgmBtn{background:var(--kinari);color:var(--sumi);border:1px solid var(--gold);margin-top:16px;min-height:44px;padding:9px 18px;font-size:.85rem}
+      </style>
+      <button type="button" id="playBgmBtn" class="sound" aria-pressed="false">♪ 開運Hzを流す</button>
+      <!-- PHASE-AUDIOFIX2 再生ボタン ここまで -->
     </section>
 
     <section class="reflection" id="reflection" aria-label="昨日の振り返り">
@@ -244,12 +260,13 @@
     };
     const STORAGE='hanabiyori.free.v2';
     const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+    const BUILD_ID='20261120-01';
     const state={sound:true,today:keyFor(new Date()),draw:null,revealing:false};
 
     function keyFor(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
     function previousKey(){const d=new Date();d.setDate(d.getDate()-1);return keyFor(d)}
     function data(){try{return JSON.parse(localStorage.getItem(STORAGE))||{}}catch(e){return{}}}
-    function save(v){try{localStorage.setItem(STORAGE,JSON.stringify(v))}catch(e){}}
+    function save(v){try{localStorage.setItem(STORAGE,JSON.stringify(v))}catch(e){audioError('save',e)}}
     // Import only compatible free-reading draws; a local date always wins.
     window.__hbImportPastReadings=(entries)=>{
       const stored=data();stored.days=stored.days||{};
@@ -289,188 +306,110 @@
       const center=c.rank==='光'?`<circle cx="46" cy="42" r="18" fill="${c.ac}" opacity=".13"/><text x="46" y="47" text-anchor="middle" font-size="16" fill="${c.ac}" opacity=".8">✦</text>`:c.rank==='種'?`<ellipse cx="46" cy="44" rx="19" ry="12" fill="${c.ac}" opacity=".11"/>`:c.rank==='短冊'?`<rect x="36" y="18" width="20" height="47" rx="3" fill="${c.ac}" opacity=".13"/>`:'';
       return `<svg viewBox="0 0 92 124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.name}、${c.rank}"><rect width="92" height="124" fill="${c.cl}" rx="5"/><rect x="3" y="3" width="86" height="118" rx="3" fill="none" stroke="${c.ac}" stroke-width="${c.rank==='光'?1.4:.7}" opacity=".62"/>${center}<path d="${motif}" stroke="${c.ac}" stroke-width="1.45" fill="none" opacity=".42"/><rect x="3" y="85" width="86" height="36" fill="${c.ac}" opacity=".11"/><line x1="3" y1="85" x2="89" y2="85" stroke="${c.ac}" opacity=".35"/><text x="46" y="100" text-anchor="middle" font-size="6.4" fill="${c.ac}" font-family="serif" font-weight="bold">${c.name}</text><text x="46" y="115" text-anchor="middle" font-size="5.1" fill="${c.ac}" opacity=".7" font-family="serif">${c.mj}　${c.rank}</text></svg>`
     }
+    window.__hbDiag={notes:0,pashi:0,pashiPlayed:0,drawEvents:[],errors:[],startedAt:null,preload:{started:false,done:0,failed:0}};
+    function preloadCardArt(){
+      const diag=window.__hbDiag.preload;if(diag.started)return;diag.started=true;
+      Object.values(CARD_ART).filter(Boolean).forEach(src=>{
+        try{const image=new Image();image.onload=()=>diag.done++;image.onerror=()=>diag.failed++;image.src=src}catch(e){diag.failed++}
+      });
+    }
+    function audioError(where,e){window.__hbDiag.errors.push({where,name:e?.name||'Error',message:String(e?.message||e)})}
     function audioCtx(){
       try{
         const A=window.AudioContext||window.webkitAudioContext;
         return pashi.ctx||(A?(pashi.ctx=new A()):null);
-      }catch(e){return null}
+      }catch(e){audioError('audioCtx',e);return null}
     }
     function unlockAudio(){
+      preloadCardArt();
       const ctx=audioCtx();
       if(!ctx)return null;
+      if(ctx.state!=='closed')loadPashi(ctx);
       try{
-        if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(()=>{});
-      }catch(e){}
+        if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(e=>audioError('unlockAudio.resume',e));
+      }catch(e){audioError('unlockAudio.resume',e)}
       try{
         const source=ctx.createBufferSource();
         source.buffer=ctx.createBuffer(1,1,ctx.sampleRate);
         source.connect(ctx.destination);source.start();
-      }catch(e){}
+      }catch(e){audioError('unlockAudio.buffer',e)}
       return ctx;
     }
-    function pashi(){
+    document.addEventListener('pointerdown',()=>{if(!pashi.ctx||pashi.ctx.state!=='running')unlockAudio()},true);
+    let sharedAnalyser=null;
+    function analyserFor(ctx){
+      if(!sharedAnalyser || sharedAnalyser.context!==ctx){
+        sharedAnalyser=ctx.createAnalyser();sharedAnalyser.connect(ctx.destination);
+        window.__hbDiag.analyser=sharedAnalyser;
+      }
+      return sharedAnalyser;
+    }
+    let pashiBuffer=null,pashiLoad=null;
+    function loadPashi(ctx){
+      if(pashiBuffer)return Promise.resolve(pashiBuffer);
+      if(!pashiLoad)pashiLoad=fetch('pashi.m4a').then(r=>{if(!r.ok)throw new Error('pashi.m4a: HTTP '+r.status);return r.arrayBuffer()}).then(bytes=>ctx.decodeAudioData(bytes)).then(buffer=>pashiBuffer=buffer).catch(e=>{audioError('loadPashi',e);return null}).finally(()=>{pashiLoad=null});
+      return pashiLoad;
+    }
+    function pashi(when){
+      window.__hbDiag.pashi++;
       if(!state.sound)return;
       try{
-        const ctx=audioCtx();
-        if(!ctx)return;
-        try{
-          if(ctx.state!=='running'&&ctx.state!=='closed')ctx.resume().catch(()=>{});
-        }catch(e){}
-        const now=ctx.currentTime;
-        const scrapeDuration=0.14;
-        const scrape=ctx.createBuffer(1,Math.round(ctx.sampleRate*scrapeDuration),ctx.sampleRate),scrapeData=scrape.getChannelData(0);
-        for(let i=0;i<scrapeData.length;i++){
-          const t=i/ctx.sampleRate;
-          scrapeData[i]=(Math.random()*2-1)*Math.pow(Math.sin(Math.PI*t/scrapeDuration),1.5);
-        }
-        const scrapeSource=ctx.createBufferSource(),filter=ctx.createBiquadFilter();
-        scrapeSource.buffer=scrape;filter.type='bandpass';filter.Q.value=0.7;
-        filter.frequency.setValueAtTime(500,now);
-        filter.frequency.linearRampToValueAtTime(2600,now+scrapeDuration);
-        scrapeSource.connect(filter);filter.connect(ctx.destination);scrapeSource.start(now);
-        const snapDuration=0.06;
-        const snap=ctx.createBuffer(1,Math.round(ctx.sampleRate*snapDuration),ctx.sampleRate),snapData=snap.getChannelData(0);
-        for(let i=0;i<snapData.length;i++){
-          const t=i/ctx.sampleRate;
-          snapData[i]=(Math.random()*2-1)*Math.exp(-t*85)*0.9;
-        }
-        const snapSource=ctx.createBufferSource();snapSource.buffer=snap;
-        snapSource.connect(ctx.destination);snapSource.start(now+0.13);
-      }catch(e){}
+        const ctx=audioCtx();if(!ctx)return;
+        const play=buffer=>{
+          if(!buffer)return;
+          try{
+            const source=ctx.createBufferSource();source.buffer=buffer;
+            source.connect(analyserFor(ctx));source.onended=()=>source.disconnect();
+            source.start(Math.max(when ?? ctx.currentTime,ctx.currentTime));
+            window.__hbDiag.pashiPlayed++;
+          }catch(e){audioError('pashi.play',e)}
+        };
+        if(pashiBuffer)play(pashiBuffer);else loadPashi(ctx).then(play);
+      }catch(e){audioError('pashi',e)}
     }
     // BGM shares pashi.ctx; only explicit user gestures call startBgm().
-    let bgm=null;
-    function stopBgmGroup(group){
-      group.active=false;
-      for(const timer of group.timers)try{clearTimeout(timer)}catch(e){}
-      for(const node of group.nodes){
-        try{if(node.stop)node.stop()}catch(e){}
-        try{node.disconnect()}catch(e){}
-      }
-      group.timers.clear();group.nodes.clear();
+    let bgm=null,bgmBuffer=null,bgmLoad=null,bgmRequest=0;
+    function loadBgm(ctx){
+      if(bgmBuffer)return Promise.resolve(bgmBuffer);
+      if(!bgmLoad)bgmLoad=fetch('bgm.m4a').then(r=>{if(!r.ok)throw new Error('bgm.m4a: HTTP '+r.status);return r.arrayBuffer()}).then(bytes=>ctx.decodeAudioData(bytes)).then(buffer=>bgmBuffer=buffer).catch(e=>{audioError('loadBgm',e);return null}).finally(()=>{bgmLoad=null});
+      return bgmLoad;
     }
     function stopBgm(){
+      bgmRequest++;
       const session=bgm;bgm=null;
       if(!session)return;
-      for(const group of session.groups)stopBgmGroup(group);
-      try{session.master.disconnect()}catch(e){}
+      try{session.source.stop()}catch(e){audioError('stopBgm.stop',e)}
+      try{session.source.disconnect();session.gain.disconnect()}catch(e){audioError('stopBgm.disconnect',e)}
+    }
+    function playBgmBuffer(ctx,buffer,offset){
+      const source=ctx.createBufferSource(),gain=ctx.createGain();
+      source.buffer=buffer;source.loop=true;
+      const t=ctx.currentTime;gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(1.0,t+2.5);
+      source.connect(gain);gain.connect(analyserFor(ctx));
+      source.start(0,offset);bgm={ctx,source,gain,buffer};
     }
     function startBgm(){
+      preloadCardArt();
       if(!state.sound||bgm)return;
       try{
-        const ctx=unlockAudio();
-        if(!ctx||ctx.state==='closed')return;
-        if(!state.sound||bgm)return;
-        const master=ctx.createGain();master.gain.value=0.12;master.connect(ctx.destination);
-        const session={groups:[],master};bgm=session;
-        const random=(min,max)=>min+Math.random()*(max-min);
-        const runGroup=initialize=>{
-          const group={active:true,timers:new Set(),nodes:new Set()};session.groups.push(group);
-          const own=node=>{group.nodes.add(node);return node};
-          const later=(fn,seconds)=>{
-            const timer=setTimeout(()=>{
-              group.timers.delete(timer);
-              if(!group.active||bgm!==session||!state.sound)return;
-              try{fn()}catch(e){stopBgmGroup(group)}
-            },seconds*1000);
-            group.timers.add(timer);
-          };
-          const finish=(source,nodes,end)=>{
-            source.onended=()=>{for(const node of nodes)try{node.disconnect();group.nodes.delete(node)}catch(e){}};
-            source.start();source.stop(end);
-          };
-          try{initialize(own,later,finish)}catch(e){stopBgmGroup(group)}
-        };
-        runGroup((own,later,finish)=>{
-          const scale=[293.66,311.13,392.00,440.00,466.16,587.33,622.25,783.99,880.00,932.33];
-          const pluck=frequency=>{
-            let buffer;
-            try{
-              const length=Math.round(ctx.sampleRate*3.5),period=ctx.sampleRate/frequency-0.5;
-              const delay=new Float32Array(Math.ceil(period));
-              buffer=ctx.createBuffer(1,length,ctx.sampleRate);
-              for(let i=0;i<delay.length;i++)delay[i]=random(-1,1);
-              const samples=buffer.getChannelData(0),whole=Math.floor(period),fraction=period-whole;
-              // Fractional delay plus the averaging filter's half-sample delay preserves tuning.
-              for(let i=0;i<length;i++){
-                const a=i-whole,b=a-1;
-                const x=a<0?delay[(a+delay.length)%delay.length]:samples[a];
-                const y=b<0?delay[(b+delay.length)%delay.length]:samples[b];
-                const c=b-1,z=c<0?delay[(c+delay.length)%delay.length]:samples[c];
-                samples[i]=0.996*((1-fraction)*(x+y)+fraction*(y+z))*0.5;
-              }
-            }catch(e){buffer=null}
-            const source=own(buffer?ctx.createBufferSource():ctx.createOscillator()),gain=own(ctx.createGain()),now=ctx.currentTime;
-            if(buffer)source.buffer=buffer;else{source.type='sine';source.frequency.value=frequency}
-            gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.38,now+0.004);
-            gain.gain.exponentialRampToValueAtTime(0.0001,now+3.5);
-            source.connect(gain);gain.connect(master);finish(source,[source,gain],now+3.5);
-          };
-          let index=4;
-          const melody=()=>{
-            const r=Math.random(),step=r<0.4?-1:r<0.8?1:r<0.875?-2:r<0.95?2:0;
-            index=Math.max(0,Math.min(scale.length-1,index+step));
-            const frequency=scale[index];pluck(frequency);
-            if(Math.random()<0.15)later(()=>pluck(frequency),0.2);
-            later(melody,random(1.1,2.3));
-          };
-          melody();
+        const ctx=unlockAudio();if(!ctx||ctx.state==='closed')return;
+        loadPashi(ctx);
+        const request=++bgmRequest;
+        loadBgm(ctx).then(buffer=>{
+          if(!buffer||request!==bgmRequest||!state.sound||bgm)return;
+          try{playBgmBuffer(ctx,buffer,0);window.__hbDiag.startedAt=Date.now()}
+          catch(e){audioError('startBgm',e);stopBgm()}
         });
-        runGroup((own,later,finish)=>{
-          const drone=own(ctx.createGain());drone.gain.value=0.16;drone.connect(master);
-          const breath=own(ctx.createOscillator()),breathDepth=own(ctx.createGain());
-          breath.frequency.value=1/11;breathDepth.gain.value=0.06;
-          breath.connect(breathDepth);breathDepth.connect(drone.gain);breath.start();
-          for(const [frequency,level] of [[264,0.28],[396,0.065],[528,0.045],[220,0.055]]){
-            const source=own(ctx.createOscillator()),gain=own(ctx.createGain());
-            source.type='sine';source.frequency.value=frequency;gain.gain.value=level;
-            source.connect(gain);gain.connect(drone);source.start();
-          }
-        });
-        runGroup((own,later,finish)=>{
-          const flute=frequency=>{
-            const now=ctx.currentTime,duration=3.2;
-            const source=own(ctx.createOscillator()),envelope=own(ctx.createGain());
-            const vibrato=own(ctx.createOscillator()),depth=own(ctx.createGain());
-            source.type='sine';source.frequency.value=frequency;vibrato.frequency.value=5.5;
-            depth.gain.setValueAtTime(0,now);depth.gain.setValueAtTime(0,now+duration/2);
-            depth.gain.linearRampToValueAtTime(2.5,now+duration-0.4);
-            vibrato.connect(depth);depth.connect(source.frequency);
-            envelope.gain.setValueAtTime(0,now);envelope.gain.linearRampToValueAtTime(0.13,now+0.8);
-            envelope.gain.setValueAtTime(0.13,now+duration-1);envelope.gain.linearRampToValueAtTime(0,now+duration);
-            source.connect(envelope);envelope.connect(master);
-            const noise=own(ctx.createBufferSource()),filter=own(ctx.createBiquadFilter()),air=own(ctx.createGain());
-            const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*duration),ctx.sampleRate),samples=buffer.getChannelData(0);
-            for(let i=0;i<samples.length;i++)samples[i]=random(-1,1);
-            noise.buffer=buffer;filter.type='bandpass';filter.frequency.value=1800;filter.Q.value=0.8;air.gain.value=0.025;
-            noise.connect(filter);filter.connect(air);air.connect(envelope);
-            finish(vibrato,[vibrato,depth],now+duration);
-            finish(noise,[noise,filter,air],now+duration);
-            finish(source,[source,envelope],now+duration);
-          };
-          const phrases=[[587.33,783.99,528],[622.25,587.33,528],[783.99,880,622.25,528]];
-          const phrase=()=>{
-            const notes=phrases[Math.floor(random(0,phrases.length))];
-            notes.forEach((frequency,i)=>later(()=>flute(frequency),i*2.5));
-            later(phrase,random(9,16));
-          };
-          later(phrase,random(9,16));
-        });
-        runGroup((own,later,finish)=>{
-          const bell=()=>{
-            const now=ctx.currentTime;
-            for(const [frequency,level] of [[888,0.055],[1776,0.008]]){
-              const source=own(ctx.createOscillator()),gain=own(ctx.createGain());source.frequency.value=frequency;
-              gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(level,now+0.003);
-              gain.gain.exponentialRampToValueAtTime(0.00001,now+1.2);
-              source.connect(gain);gain.connect(master);finish(source,[source,gain],now+1.3);
-            }
-            later(bell,random(15,35));
-          };
-          later(bell,random(15,35));
-        });
-      }catch(e){} // A failed start can be retried by the next explicit gesture.
+      }catch(e){audioError('startBgm',e);stopBgm()}
     }
+    window.__hbDiag.seekBgm=offsetSec=>{
+      if(!bgm)return false;
+      try{
+        const {ctx,buffer}=bgm;
+        if(!Number.isFinite(offsetSec)||offsetSec<0)return false;
+        stopBgm();playBgmBuffer(ctx,buffer,offsetSec%buffer.duration);return true;
+      }catch(e){audioError('seekBgm',e);stopBgm();return false}
+    };
     function vibrate(){try{if(navigator.vibrate)navigator.vibrate(18)}catch(e){}}
     function showToast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>e.classList.remove('show'),1800)}
     const ONI_NOTES=['鬼札 ― 今日は雷の気配。思いがけない知らせが、空気を切り替えそうです。', '鬼札 ― 滞って見えるものも、ふいのきっかけで姿を変えていくかもしれません。', '鬼札 ― 予定にない一手を、今日は軽く拾ってみて。その一手が、流れを変えるきっかけになりそうです。'];
@@ -486,12 +425,17 @@
     function makeAction(cards,variant){const key=cards[2].el,choice=ACTIONS[key][variant%ACTIONS[key].length];return{title:choice,text:`「${cards[2].name}」が示すのは、${cards[2].desc}。全部を変えようとせず、${choice}ことから始めてみましょう。`}}
     function render(animate=true){
       if(state.revealing)return;state.revealing=true;const cards=state.draw.ids.map(id=>CARDS[id]);
-      cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');pashi();vibrate()};animate?setTimeout(reveal,60+i*280):reveal()});
+      if(animate)try{
+        const glow=document.createElement('div');glow.className='reveal-glow';glow.setAttribute('aria-hidden','true');
+        glow.addEventListener('animationend',()=>glow.remove(),{once:true});$('#cards').appendChild(glow);
+      }catch(e){}
+      if(animate && state.sound){const ctx=audioCtx();if(ctx)for(let i=0;i<3;i++)pashi(ctx.currentTime+0.06+i*0.28)}
+      cards.forEach((c,i)=>{const reveal=()=>{$('#card'+i).classList.add('revealed');vibrate()};animate?setTimeout(reveal,60+i*280):reveal()});
       const delay=animate?1050:30;setTimeout(()=>{
         const w=weather(cards);$('#weatherTitle').textContent=w;$('#weatherMessage').textContent=WEATHER[w].msg;
         $('#readings').innerHTML=cards.map((c,i)=>`<article class="reading"><div class="reading-head"><span class="reading-index">${['一','二','三'][i]}</span><span class="reading-role">${ROLES[i].name}</span><span class="reading-card">${c.name}</span></div><p>${ROLES[i].lead}「${c.desc}」${ROLES[i].tails[state.draw.variant%ROLES[i].tails.length]}</p>${c.id===43?`<p class="oni-note">${ONI_NOTES[i]}</p>`:''}</article>`).join('');
         const a=makeAction(cards,state.draw.variant);$('#actionTitle').textContent=a.title;$('#actionText').textContent=a.text;$('#result').classList.add('show');$('#drawBtn').textContent='本日は占い済み';$('#drawBtn').disabled=true;state.revealing=false;
-        const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored);
+        try{const stored=data();stored.sound=state.sound;stored.days=stored.days||{};stored.days[state.today]=state.draw;Object.keys(stored.days).sort().slice(0,-14).forEach(k=>delete stored.days[k]);save(stored)}catch(e){audioError('render.save',e)}
         window.__hbRecordReading?.();
         if(animate)scheduleRegisterPrompt('A');
         if(animate)$('#result').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
@@ -534,43 +478,96 @@
     }).observe(document.body,{attributes:true,attributeFilter:['data-auth-state','data-member-state']});
     function updateSound(){const on=state.sound;$('#soundBtn').setAttribute('aria-pressed',String(on));$('#soundIcon').textContent=on?'♪':'×';$('#soundText').textContent=on?'音あり':'消音'}
     $('#drawBtn').addEventListener('click',()=>{
+      const event=name=>window.__hbDiag.drawEvents.push({event:name,time:Date.now()});
+      event('handler');
       drawStarted=true;clearTimeout(registerTimer);
-      if(state.sound)unlockAudio();
+      try{if(state.sound)unlockAudio()}catch(e){audioError('draw.unlockAudio',e)}
       if(!state.draw){
-        state.draw=randomDraw();
-        const stored=data();stored.days=stored.days||{};stored.days[state.today]=state.draw;save(stored);
-        state.draw.ids.map(id=>CARDS[id]).forEach((c,i)=>$('#card'+i+' .front').innerHTML=cardFront(c));
+        try{state.draw=randomDraw()}catch(e){
+          audioError('draw.randomDraw',e);
+          const pool=[...CARDS];
+          for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+          state.draw={ids:pool.slice(0,3).map(c=>c.id),variant:Math.floor(Math.random()*3),created:Date.now()};
+        }
       }
-      render(true);
-      startBgm();
+      try{
+        state.draw.ids.forEach((id,i)=>{try{$('#card'+i+' .front').innerHTML=cardFront(CARDS[id])}catch(e){audioError('draw.cardFront.'+i,e)}});
+      }catch(e){audioError('draw.cardFront',e)}
+      event('fronts');
+      try{render(true);event('render')}catch(e){audioError('draw.render',e)}
+      try{startBgm()}catch(e){audioError('draw.startBgm',e)}
     });
     $('#againBtn').addEventListener('click',()=>$('#drawStage').scrollIntoView({behavior:'smooth'}));
     $('#soundBtn').addEventListener('click',()=>{state.sound=!state.sound;const stored=data();stored.sound=state.sound;save(stored);updateSound();if(state.sound)startBgm();else stopBgm();showToast(state.sound?'音をオンにしました':'音をオフにしました')});
     $$('.reflection-actions button').forEach(b=>b.addEventListener('click',()=>{const stored=data(),d=stored.days?.[previousKey()];if(d){d.reflection=b.dataset.reflect;save(stored)}$('#reflection').classList.remove('show');showToast('昨日の記録を残しました')}));
     formatDate();prepare();scheduleRegisterPrompt('C');
+    /* PHASE-AUDIOFIX2 ここから */
+    let lastDiagText='';
+    function updateDiagChip(){
+      const chip=document.getElementById('hbDiagChip');
+      if(!chip)return;
+      const a=pashi.ctx?pashi.ctx.state:'—';
+      const text=`版 ${BUILD_ID}｜音声：${a}｜音：${state.sound?'ON':'OFF'}`;
+      if(text!==lastDiagText){chip.textContent=text;lastDiagText=text}
+    }
+    setInterval(updateDiagChip,500);
+    let lastBuildCheck=-Infinity;
+    async function checkBuild(){
+      if(state.revealing)return;
+      const now=performance.now();
+      if(now-lastBuildCheck<10000)return;
+      lastBuildCheck=now;
+      try{
+        const response=await fetch('version.json',{cache:'no-store'});
+        if(!response.ok)return;
+        const version=await response.json();
+        if(!version || typeof version.build!=='string' || version.build===BUILD_ID || state.revealing)return;
+        const key='hb.buildReloadedFor';
+        if(sessionStorage.getItem(key)===version.build)return;
+        sessionStorage.setItem(key,version.build);
+        location.reload();
+      }catch{}
+    }
+    window.addEventListener('pageshow',checkBuild);
+    document.addEventListener('visibilitychange',()=>{
+      if(document.visibilityState==='visible')checkBuild();
+    });
+    /* PHASE-AUDIOFIX2 ここまで */
+    /* PHASE-AUDIOFIX2 再生ボタン ここから */
+    const playBgmBtn=document.getElementById('playBgmBtn');
+    let lastPlayBgmPlaying=null;
+    function syncPlayBgmButton(){
+      const playing = !!bgm;
+      if(playing!==lastPlayBgmPlaying){
+        playBgmBtn.textContent=playing?'開運Hzを止める':'♪ 開運Hzを流す';
+        playBgmBtn.setAttribute('aria-pressed',String(playing));
+        lastPlayBgmPlaying=playing;
+      }
+    }
+    syncPlayBgmButton();
+    playBgmBtn.addEventListener('click',()=>{
+      const playing = !!bgm;
+      if(playing){
+        stopBgm();
+        state.sound=false;
+      }else state.sound=true;
+      const stored=data();stored.sound=state.sound;save(stored);
+      updateSound();
+      if(!playing){unlockAudio();startBgm()}
+      showToast(playing?'音をオフにしました':'音をオンにしました');
+      syncPlayBgmButton();
+    });
+    $('#soundBtn').addEventListener('click',syncPlayBgmButton);
+    setInterval(syncPlayBgmButton,500);
+    /* PHASE-AUDIOFIX2 再生ボタン ここまで */
   })();
   </script>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-    window.hbLineAuth = (async () => {
-      try {
-        if (!window.liff) return null;
-        const LINE_AUTH_URL = 'https://lbokynfmrdipdjekzibj.supabase.co/functions/v1/line-auth';
-        const liffId = '2012718957-z5i5pyPU';
-        await liff.init({ liffId });
-        if (!liff.isInClient()) return null;
-        const idToken = liff.getIDToken();
-        if (!idToken) return null;
-        const response = await fetch(LINE_AUTH_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'status', idToken }), cache: 'no-store'
-        });
-        if (!response.ok) return { idToken };
-        const result = await response.json();
-        return { idToken, linked: result.linked };
-      } catch { return null; }
-    })();
-  </script>
   <script type="module" src="auth-ui.js"></script>
+<!-- PHASE-AUDIOFIX2 診断チップ ここから -->
+<style>
+  #hbDiagChip{position:fixed;right:8px;bottom:8px;z-index:9999;pointer-events:none;font-size:11px;line-height:1.5;padding:4px 8px;border-radius:8px;background:rgba(20,16,28,.62);color:#f5efe2;letter-spacing:.02em}
+</style>
+<div id="hbDiagChip">版 20261120-01｜音声：—｜音：ON</div>
+<!-- PHASE-AUDIOFIX2 診断チップ ここまで -->
 </body>
 </html>
