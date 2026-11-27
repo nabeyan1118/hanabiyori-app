@@ -1,0 +1,21 @@
+{
+  "name": "花札日和",
+  "short_name": "花札日和",
+  "start_url": "/game",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#16241a",
+  "theme_color": "#1d2b21",
+  "icons": [
+    {
+      "src": "/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
