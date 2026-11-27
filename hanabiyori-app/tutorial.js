@@ -109,7 +109,7 @@
       stage = 'decision';
       pending = null;
       showGuide('役ができました。ここが勝負どころです。今あがると、この点数が確定します。こいこいと続けると、次に役ができた時に点数が倍になりますが、相手に先にあがられると倍にして払います。どうしますか？');
-      document.querySelectorAll('#actions button').forEach(b => b.classList.add('guide-target'));
+      document.querySelectorAll('#decision-pop button').forEach(b => b.classList.add('guide-target'));
       scrollToTarget();
       return;
     }
