@@ -1,0 +1,49 @@
+'use strict';
+const C=KoiCore,$=id=>document.getElementById(id);let s,selected=null,message='',timer;
+const bgm=new Audio('../bgm.m4a');bgm.loop=true;bgm.volume=0;bgm.preload='auto';
+const pashi=new Audio('../pashi.m4a');pashi.preload='auto';
+let soundOn=true,bgmStarted=false;
+function flip(){if(!soundOn)return;pashi.currentTime=0;const p=pashi.play();if(p)p.catch(()=>{});}
+function startBgm(){if(bgmStarted||!soundOn)return;bgmStarted=true;const p=bgm.play();if(p)p.then(()=>{const t0=Date.now();const iv=setInterval(()=>{const k=Math.min(1,(Date.now()-t0)/2500);bgm.volume=0.35*k;if(k>=1)clearInterval(iv);},100);}).catch(()=>{bgmStarted=false;});}
+document.addEventListener('pointerdown',startBgm);
+function start(deck){clearTimeout(timer);let tries=0;do{s=C.initial(deck);tries++;}while(s.phase==='redeal'&&tries<1000);selected=null;message=tries>1?'場に同月4枚（くっつき）があったため、配り直しました。':'あなたの手札を選んでください。';render();if(window.TutHook)window.TutHook();if(s.turn===1&&s.phase!=='end')cpu();}
+const MONTH_COLORS=['#4a7a5c','#a05a68','#d9a7b0','#97889f','#6a6390','#c07a92','#9a6a86','#b39b5e','#cdb052','#a85a3c','#8a9a5b','#a298b8'];window.__mc=id=>MONTH_COLORS[C.CARDS[id].monthIndex-1];
+function image(id,handler,cls=''){const c=C.CARDS[id],b=document.createElement('button');b.className='card '+cls;b.type='button';b.setAttribute('aria-label',`${c.month} ${c.motif}`);b.style.setProperty('--mc',MONTH_COLORS[c.monthIndex-1]);const img=document.createElement('img');img.src=`../assets/cards/card-${String(id).padStart(2,'0')}.webp?v=20261127b`;img.alt=c.motif;b.append(img);if(handler)b.onclick=()=>{flip();handler();};else b.disabled=true;return b;}
+function progressText(p){
+ const taken=s.taken[p], held=new Set(taken), dead=new Set(s.taken[1-p]);
+ const formed=new Set(C.yaku(taken).map(r=>r.name));
+ const out=[];
+ const nonRain=[0,8,28,44], hNR=nonRain.filter(i=>held.has(i)).length, hasRain=held.has(40), totalL=hNR+(hasRain?1:0);
+ if(hNR<3){const miss=3-hNR, avail=nonRain.filter(i=>!held.has(i)&&!dead.has(i)).length; if(hNR>=1&&miss<=2&&avail>=miss)out.push(['三光',miss]);}
+ if(hNR===3){const m4=nonRain.find(i=>!held.has(i)); if(!dead.has(m4))out.push(['四光',1]); if(!hasRain&&!dead.has(40))out.push(['雨四光',1]); if(!dead.has(40)&&hasRain===false&&totalL===3){/* 五光は雨も必要で残り2枚のため対象外 */}
+ }
+ if(hasRain&&totalL===3){const avail=nonRain.filter(i=>!held.has(i)&&!dead.has(i)).length; if(avail>=1)out.push(['雨四光',1]);}
+ if(totalL===4){const m5=[0,8,28,40,44].find(i=>!held.has(i)); if(!dead.has(m5))out.push(['五光',1]);}
+ for(const [name,set] of [['猪鹿蝶',[20,24,36]],['花見酒',[8,32]],['月見酒',[28,32]],['赤短',[1,5,9]],['青短',[21,33,37]]]){
+   const hc=set.filter(i=>held.has(i)).length; if(hc===0||hc===set.length)continue;
+   const missing=set.filter(i=>!held.has(i)); if(missing.length>2)continue; if(missing.some(i=>dead.has(i)))continue;
+   out.push([name,missing.length]);
+ }
+ const counts={}, oppCounts={}; taken.forEach(i=>counts[C.CARDS[i].type]=(counts[C.CARDS[i].type]||0)+1); s.taken[1-p].forEach(i=>oppCounts[C.CARDS[i].type]=(oppCounts[C.CARDS[i].type]||0)+1);
+ const TOTALS={'種':9,'短冊':10,'カス':24};
+ const redBlueDone=[1,5,9].every(i=>held.has(i))||[21,33,37].every(i=>held.has(i));
+ const iscDone=[20,24,36].every(i=>held.has(i));
+ for(const [name,type,target] of [['短冊','短冊',5],['種','種',5],['カス','カス',10]]){
+   if(name==='短冊'&&redBlueDone)continue; if(name==='種'&&iscDone)continue;
+   const n=counts[type]||0, need=target-n; if(need<1||need>2)continue;
+   if(TOTALS[type]-(oppCounts[type]||0)<target)continue;
+   out.push([name,need]);
+ }
+ return out.filter(([n])=>!formed.has(n)).sort((a,b)=>a[1]-b[1]).slice(0,3).map(([n,m])=>`${n} あと${m}枚`).join('　');
+}
+function groups(el,ids){el.replaceChildren();for(const type of ['光','種','短冊','カス']){const list=ids.filter(i=>C.CARDS[i].type===type);if(!list.length)continue;const lab=document.createElement('span');lab.className='tlabel';lab.textContent=`${type} ${list.length}`;el.append(lab);list.forEach(i=>el.append(image(i)));}}
+function render(){ $('notice').textContent=message;if(s.phase==='end'&&s.result&&s.result.winner!==null){const r=s.result;$('notice').textContent=`${r.winner===0?'あなた':'CPU'}のあがり：${r.roles.map(x=>`${x.name} ${x.points}点`).join('、')} ／ 素点 ${r.base}点 ／ 合計 ${r.total}点`;}
+ const yk=$('yaku');yk.replaceChildren();const showRoles=s.phase==='decision'&&s.turn===0?C.score(s.taken[0],s.declarations[0],s.declarations[1]>0).roles:(s.phase==='end'&&s.result&&s.result.winner!==null?s.result.roles:null);
+ if(showRoles)for(const role of showRoles){const wrap=document.createElement('div');wrap.className='role';const cap=document.createElement('div');cap.className='role-name';cap.textContent=`${role.name} ${role.points}点`;wrap.append(cap);if(role.cardIds&&role.cardIds.length){const row=document.createElement('div');row.className='cards';role.cardIds.forEach(id=>row.append(image(id)));wrap.append(row);}yk.append(wrap);}$('cpu-info').textContent=`手札 ${s.hands[1].length}枚 · こいこい ${s.declarations[1]}回`;$('player-info').textContent=`こいこい ${s.declarations[0]}回`;$('deck').textContent=`山 ${s.deck.length}枚`;const ch=$('cpu-hand');ch.replaceChildren();s.hands[1].forEach(()=>{const b=document.createElement('div');b.className='card';b.innerHTML='<span class="back"></span>';ch.append(b)});groups($('cpu-taken'),s.taken[1]);groups($('player-taken'),s.taken[0]);$('cpu-progress').textContent=progressText(1);$('player-progress').textContent=progressText(0);const hand=$('hand');hand.replaceChildren();s.hands[0].forEach(id=>hand.append(image(id,s.turn===0&&s.phase==='play'?()=>select(id):null,selected===id?'selected':'')));const f=$('field');f.replaceChildren();const active=s.turn===0?(s.phase==='drawChoice'?s.pending:selected):null;const ms=active==null?[]:C.matches(s,active);s.field.forEach(id=>f.append(image(id,ms.length===2&&ms.includes(id)?()=>choose(id):null,ms.length===2&&ms.includes(id)?'valid':'')));$('drawn').replaceChildren();if(s.phase==='drawChoice'){const label=document.createElement('span');label.textContent='山から引いた札：';$('drawn').append(label,image(s.pending));}const a=$('actions');a.replaceChildren();if(s.phase==='decision'&&s.turn===0){const sc=C.score(s.taken[0],s.declarations[0],s.declarations[1]>0);for(const [label,choice] of [['こいこい','koi'],[`あがり（${sc.total}点）`,'agari']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{C.decide(s,choice);message=choice==='koi'?'こいこいを宣言しました。':'あがり！';render();cpu();};a.append(b);}}const result=$('result');result.replaceChildren();if(s.phase==='end'){const r=s.result;const title=document.createElement('h2');title.textContent=r.winner===null?'引き分け':`${r.winner===0?'あなた':'CPU'}の勝ち`;result.append(title);const p=document.createElement('p');p.textContent=r.winner===null?'手札を使い切り、あがりがないまま局が終了しました。':`${r.reason}：${r.roles.map(x=>`${x.name} ${x.points}点`).join('、')} ／ 素点 ${r.base}点`;result.append(p);if(r.winner!==null){const q=document.createElement('p');q.textContent=`こいこい ×${r.koi} × 7点以上 ×${r.seven} × 宣言側の倍払い ×${r.payment} ＝ ${r.total}点`;result.append(q);}const b=document.createElement('button');b.className='again';b.textContent='もう一局';b.onclick=start;result.append(b);}if(window.TutHook)window.TutHook();}
+function select(id){if(window.__tutSelect&&window.__tutSelect(id))return;selected=id;const ms=C.matches(s,id);if(ms.length===2){message='取る場の同月札を選んでください。';render();}else{C.play(s,id);selected=null;after();}}
+function choose(id){if(s.phase==='drawChoice')C.chooseDraw(s,id);else{C.play(s,selected,id);selected=null;}after();}
+function after(){if(s.phase==='decision'){const sc=C.score(s.taken[s.turn],s.declarations[s.turn],s.declarations[1-s.turn]>0);message=`役ができました：${sc.roles.map(x=>`${x.name} ${x.points}点`).join('、')} ／ 素点 ${sc.base}点。あがると ${sc.total}点で確定します。こいこい、またはあがりを選んでください。`;}else message=s.phase==='drawChoice'?'山から引いた札に合わせる場の札を選んでください。':s.phase==='end'?'局が終わりました。':s.turn===0?'あなたの手札を選んでください。':'CPUが考えています…';render();cpu();}
+function cpu(){if(s.phase==='end'||s.turn!==1)return;timer=setTimeout(()=>{if(s.phase==='play'){const move=C.cpuPlay(s);flip();C.play(s,move.id,move.target);}if(s.phase==='drawChoice'){flip();C.chooseDraw(s,C.cpuTarget(s,s.pending));}if(s.phase==='decision'){const choice=C.cpuDecision(s);C.decide(s,choice);message=choice==='koi'?'CPUがこいこいを宣言しました。':'CPUがあがりました。';render();if(s.turn===0||s.phase==='end')return;}after();},600);}
+$('restart').onclick=()=>start(window.__tutDeck||undefined);
+$('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent=soundOn?'音 オン':'音 オフ';if(!soundOn){bgm.volume=0;}else if(bgmStarted){bgm.volume=0.35;}else{startBgm();}};
+start();
