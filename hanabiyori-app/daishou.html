@@ -10,4 +10,4 @@ function start() { deck = Array.from({length:48},(_,i)=>i); for(let i=deck.lengt
 function finish(reason) { ended=true; $('choices').hidden=true; $('end').hidden=false; $('result').textContent=`${reason} れんぞく記録：${streak}回`; }
 function play(guess) { if(ended || !deck.length)return; const next=deck.pop(); const outcome=judge(current,next,guess); current=next; if(outcome==='correct')streak++; display(); sound(); $('message').textContent=outcome==='safe'?'同じ月！ セーフ':outcome==='correct'?'正解！':'ざんねん！'; if(outcome==='wrong')finish('ゲーム終了！'); else if(!deck.length)finish('山がなくなりました！'); }
 document.querySelectorAll('[data-guess]').forEach(b=>b.addEventListener('click',()=>play(b.dataset.guess))); $('restart').addEventListener('click',start); start();
-</script></body></html>
+</script><script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}</script></body></html>
