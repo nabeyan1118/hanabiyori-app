@@ -27,7 +27,7 @@
     b.className = 'card';
       if (window.__mc) b.style.setProperty('--mc', window.__mc(id));
     const img = document.createElement('img');
-    img.src = `../assets/cards/card-${String(id).padStart(2, '0')}.webp?v=20261127b`;
+    img.src = `../assets/cards/card-${String(id).padStart(2, '0')}.webp?v=20261128a`;
     img.alt = KoiCore.CARDS[id].motif;
     b.append(img);
     return b;
@@ -78,6 +78,8 @@
     }
     sheet.append(h('こいこいと、あがり'));
     sheet.append(p('役ができたら、2つの選び方があります。「あがる」（ここで終わりにする）と、その時点の点数が確定します。「こいこい」と続けると、次に役ができた時に点数が倍になります。ただし、相手に先にあがられると、相手の点数を倍にして払います'));
+    sheet.append(h('勝負の長さ'));
+    sheet.append(p('始める前に、勝負の長さを選べます。一局勝負は1局だけ。半年勝負は6局、一年勝負は12局を続けて打ちます。局を重ねる勝負では、勝った局の点数が合計に積み上がっていきます。最後の局が終わった時に、合計の多い方の勝ちです'));
     sheet.append(h('勝負の分かれ目'));
     const ul = document.createElement('ul');
     for (const [t, body] of TURNING) { const li = document.createElement('li'); li.textContent = `${t}：${body}`; ul.append(li); }
@@ -88,7 +90,7 @@
      'くっつき：場に同じ月が4枚あると、配り直し',
      '役の素点が7点以上あると、点がもう1倍になります',
      '山が尽きて両方ともあがれなければ、流れ（引き分け）',
-     '1局だけの勝負で、あなたが先手です'].forEach(t => { const li = document.createElement('li'); li.textContent = t; ul2.append(li); });
+     'どの勝負でも、あなたが先手です'].forEach(t => { const li = document.createElement('li'); li.textContent = t; ul2.append(li); });
     sheet.append(ul2);
     const closeRow = document.createElement('p');
     closeRow.className = 'close-row';

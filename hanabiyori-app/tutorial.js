@@ -7,7 +7,7 @@
 //   2手目 松のカス(2)→松に鶴(0) で三光がそろい、判断点に届く。
 (function () {
   const TUT_DECK = [10, 2, 6, 18, 22, 34, 38, 46, 4, 12, 16, 20, 24, 36, 44, 41, 8, 28, 0, 13, 17, 25, 33, 45, 30, 47, 1, 3, 5, 7, 9, 11, 14, 15, 19, 21, 23, 26, 27, 29, 31, 32, 35, 37, 39, 40, 42, 43];
-  let active = false, stage = '', choice = null, prevPhase = '', pending = null, freePlayNoted = false;
+  let active = false, stage = '', choice = null, prevPhase = '', pending = null, freePlayNoted = false, introPending = true;
 
   const guide = () => document.getElementById('guide');
   function showGuide(html) {
@@ -69,11 +69,11 @@
     });
   }
   function reflection() {
-    if (choice === 'agari') return 'この局の分かれ目は、三光がそろったところでした。あそこで「あがり」を選んだので、5点がそのまま残りました';
+    if (choice === 'agari') return 'この局の分かれ目は、三光がそろったところでした。あそこで「あがり」を選んだので、5点がそのまま残りました。半年勝負や一年勝負では、勝った方の点数が合計に積み上がります';
     const w = s.result ? s.result.winner : null;
-    if (w === 0) return 'この局の分かれ目は、三光がそろったところでした。「こいこい」を選んで続け、最後はあなたの勝ち。続けた判断が実った局です';
-    if (w === 1) return 'この局の分かれ目は、三光がそろったところでした。「こいこい」で続けた間に、相手にあがられました。あそこで止めるのも勝ち方でした';
-    return 'この局の分かれ目は、三光がそろったところでした。結果は引き分け。止めるか続けるかで、局の流れが変わります';
+    if (w === 0) return 'この局の分かれ目は、三光がそろったところでした。「こいこい」を選んで続け、最後はあなたの勝ち。続けた判断が実った局です。半年勝負や一年勝負では、勝った方の点数が合計に積み上がります';
+    if (w === 1) return 'この局の分かれ目は、三光がそろったところでした。「こいこい」で続けた間に、相手にあがられました。あそこで止めるのも勝ち方でした。半年勝負や一年勝負では、勝った方の点数が合計に積み上がります';
+    return 'この局の分かれ目は、三光がそろったところでした。結果は引き分け。止めるか続けるかで、局の流れが変わります。半年勝負や一年勝負では、勝った方の点数が合計に積み上がります';
   }
 
   // 手札タップの受け口：取る場の札が1枚なら、まずその札を光らせてから取らせる
@@ -130,6 +130,7 @@
     }
     if (s.turn === 0 && s.phase === 'play') {
       if (pending) {
+        introPending = false;
         showGuide('取れる場の札が光っています。押してください');
         setTimeout(scrollToTarget, 60);
         const hb = btnFor('#hand', pending.hand);
@@ -153,7 +154,7 @@
         const taken = s.taken[0];
         if (!taken.includes(8)) {
           stage = 'play1';
-          showGuide('まずは触って覚えましょう。場の札と同じ月の札が、手札にあります。光っている札を押してみてください');
+          if (introPending) showGuide('本番では、始める前に勝負の長さを選びます。一局勝負は1局だけ、半年勝負は6局、一年勝負は12局。局を重ねる勝負では、勝った局の点数が合計に積み上がります。この練習は1局だけです。まずは触って覚えましょう');
         } else {
           stage = 'play2';
           showGuide('山から引いた札も、場の「芒に月」と合いました。光の札が2枚そろっています。次は松のカスを出して、「松に鶴」を合わせてみましょう');
@@ -167,7 +168,7 @@
   };
 
   document.getElementById('tut-btn').onclick = () => {
-    active = true; stage = ''; choice = null; prevPhase = ''; pending = null; freePlayNoted = false;
+    active = true; stage = ''; choice = null; prevPhase = ''; pending = null; freePlayNoted = false; introPending = true;
     window.__tutDeck = TUT_DECK;
     start(TUT_DECK);
   };
