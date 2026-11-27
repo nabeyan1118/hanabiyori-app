@@ -54,3 +54,9 @@ section{padding:7px 0}
 .cards{margin:4px 0}
 .card{width:calc((100% - 28px)/8.6)}
 .taken .card{width:27px}
+
+.table{padding:8px 10px}
+.field .card{width:36px}
+.taken .card{width:24px}
+#hand-dock{padding:5px 10px}
+.progress{margin:2px 0}
