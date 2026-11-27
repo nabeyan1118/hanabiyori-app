@@ -26,8 +26,8 @@ a.text{color:inherit;text-decoration:underline;font-size:12px}#actions{display:f
 
 .taken .tlabel{flex:0 0 auto;background:#2c4634;border:1px solid #476b52;border-radius:999px;padding:2px 8px;font-size:11.5px}
 
-#decision-pop,#cpu-pop{position:fixed;inset:0;background:rgba(10,18,12,.74);display:flex;align-items:center;justify-content:center;z-index:90;padding:16px}
-#decision-pop[hidden],#cpu-pop[hidden]{display:none}
+#start-pop,#decision-pop,#cpu-pop{position:fixed;inset:0;background:rgba(10,18,12,.74);display:flex;align-items:center;justify-content:center;z-index:90;padding:16px}
+#start-pop[hidden],#decision-pop[hidden],#cpu-pop[hidden]{display:none}
 .decision-card{background:#faf3df;color:#1d2b21;border-radius:16px;padding:20px 18px;width:min(94vw,384px);box-shadow:0 14px 44px rgba(0,0,0,.5);text-align:center}
 .decision-card h3{margin:0 0 10px;font-size:21px}
 .decision-role{display:flex;align-items:center;justify-content:center;gap:10px;margin:7px 0;font-weight:700}
@@ -37,6 +37,7 @@ a.text{color:inherit;text-decoration:underline;font-size:12px}#actions{display:f
 .decision-btn{display:block;width:100%;margin:9px 0;padding:12px 10px;border:0;border-radius:12px;cursor:pointer;color:#fff}
 .decision-btn .decision-main{display:block;font-size:19px;font-weight:800}
 .decision-btn .decision-note{display:block;font-size:12.5px;font-weight:400;margin-top:4px;line-height:1.55;opacity:.94}
+.decision-btn.start-btn{background:#2e5d3f}
 .decision-btn.koi{background:#2e5d3f}
 .decision-btn.agari{background:#b03a2e}
 
