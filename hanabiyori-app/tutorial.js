@@ -14,6 +14,8 @@
     const g = guide();
     g.hidden = false;
     document.body.style.paddingBottom = '190px';
+    const dock = document.getElementById('hand-dock');
+    if (dock) requestAnimationFrame(() => { dock.style.bottom = g.offsetHeight + 'px'; });
     g.replaceChildren();
     const exit = document.createElement('button');
     exit.className = 'guide-exit';
@@ -23,7 +25,7 @@
     body.textContent = html;
     g.append(exit, body);
   }
-  function hideGuide() { guide().hidden = true; document.body.style.paddingBottom = ''; }
+  function hideGuide() { guide().hidden = true; document.body.style.paddingBottom = ''; const dock = document.getElementById('hand-dock'); if (dock) dock.style.bottom = ''; }
   function stopTutorial() {
     active = false;
     pending = null;
