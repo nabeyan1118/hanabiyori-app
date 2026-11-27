@@ -1,6 +1,6 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
 
-const FUNCTION_BASE = 'https://hanafuda-biyori.netlify.app/.netlify/functions';
+const FUNCTION_BASE = 'https://lbokynfmrdipdjekzibj.supabase.co/functions/v1';
 const LINE_AUTH_URL = 'https://lbokynfmrdipdjekzibj.supabase.co/functions/v1/line-auth';
 
 const panel = document.getElementById('accountPanel');
@@ -214,7 +214,7 @@ async function perform(action) {
 }
 async function publicFunction(name, body) {
   const response = await fetch(`${FUNCTION_BASE}/${name}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
     body: JSON.stringify(body), cache: 'no-store',
   });
   if (!response.ok) throw new Error('Request failed');
