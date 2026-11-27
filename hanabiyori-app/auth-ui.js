@@ -200,10 +200,37 @@ async function linkLine(current, next) {
     else if (response.status === 409) say('このLINEアカウントは別の会員に紐づいています');
   } catch {}
 }
+async function postLineAuth(action, idToken) {
+  return fetch(LINE_AUTH_URL, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || SUPABASE_ANON_KEY}` },
+    body: JSON.stringify({ action, idToken }), cache: 'no-store',
+  });
+}
+async function initializeLine(info) {
+  lineInfo = info;
+  if (!info?.idToken || !client) return;
+  if (session) { await showSession(session); return; }
+  try {
+    const response = await postLineAuth('enter', info.idToken);
+    if (!response.ok) throw new Error('Entry failed');
+    const result = await response.json();
+    if (!result.tokenHash) throw new Error('Entry failed');
+    const { error } = await client.auth.verifyOtp({ token_hash: result.tokenHash, type: 'magiclink' });
+    if (error) throw error;
+    return;
+  } catch {
+    try {
+      const response = await postLineAuth('status', info.idToken);
+      if (response.ok) lineInfo = { ...info, ...(await response.json()) };
+    } catch {}
+    if (!session) await showSession(null);
+  }
+}
+let lineReady = false;
 window.hbLineAuth?.then((info) => {
   lineInfo = info;
-  if (info?.idToken && client) showSession(session).catch(() => {});
-});
+  if (lineReady) initializeLine(info).catch(() => {});
+}).catch(() => {});
 async function perform(action) {
   if (busy) return;
   busy = true;
@@ -390,6 +417,8 @@ try {
   const { data, error } = await client.auth.getSession();
   if (error) throw error;
   await showSession(data.session);
+  lineReady = true;
+  if (lineInfo?.idToken) initializeLine(lineInfo).catch(() => {});
 } catch {
   say('ログインの準備ができませんでした。時間をおいてページを再読み込みしてください。無料の三枚読みはそのままお楽しみいただけます。');
 }

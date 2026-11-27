@@ -19,7 +19,37 @@ Deno.serve(async (request: Request) => {
   const headers = Object.fromEntries(request.headers.entries());
   headers['x-nf-client-connection-ip'] = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
   const result = await handler({ httpMethod: request.method, headers, body: await request.text() }, {
-    client, fetch, lineChannelId: Deno.env.get('LINE_CHANNEL_ID'), now: Date.now,
+    client, fetch,
+    authAdmin: {
+      getUserEmailById: async (id: string) => {
+        const { data, error } = await client.auth.admin.getUserById(id);
+        if (error && error.status !== 404) throw error;
+        return data?.user?.email || null;
+      },
+      findUserIdByEmail: async (email: string) => {
+        const perPage = 1000;
+        for (let page = 1; ; page++) {
+          const { data, error } = await client.auth.admin.listUsers({ page, perPage });
+          if (error) throw error;
+          const user = data.users.find((item) => item.email?.toLowerCase() === email.toLowerCase());
+          if (user) return user.id;
+          if (data.users.length < perPage) return null;
+        }
+      },
+      createUser: async (email: string) => {
+        const { data, error } = await client.auth.admin.createUser({ email, email_confirm: true });
+        if (error) throw error;
+        if (!data.user) throw new Error('User unavailable');
+        return { id: data.user.id };
+      },
+      issueTokenHash: async (email: string) => {
+        const { data, error } = await client.auth.admin.generateLink({ type: 'magiclink', email });
+        if (error) throw error;
+        if (!data.properties?.hashed_token) throw new Error('Token unavailable');
+        return data.properties.hashed_token;
+      },
+    },
+    lineChannelId: Deno.env.get('LINE_CHANNEL_ID'), now: Date.now,
     requireUserId: async (_client: unknown, event: { headers: Record<string, string> }) => {
       const match = /^Bearer\s+(\S+)$/i.exec(event.headers.authorization || '');
       if (!match) throw Object.assign(new Error('Unauthorized'), { statusCode: 401 });
