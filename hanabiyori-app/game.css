@@ -46,6 +46,6 @@ body{padding-bottom:118px}
 
 body.playing header{padding-bottom:4px;row-gap:0;flex-wrap:nowrap}
 body.playing header small{display:none}
-body.playing header h1{font-size:15px;letter-spacing:.06em}
+body.playing header h1{display:none}
 body.playing header>span{white-space:nowrap}
 body.playing header .text{font-size:12px}
